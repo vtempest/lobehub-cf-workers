@@ -1,0 +1,64 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "target": "ES2022",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "fumadocs-mdx:collections/server": [
+        "./.source/server.ts"
+      ]
+    },
+    "types": [
+      "@cloudflare/workers-types",
+      "node"
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "hooks/**/*.ts",
+    "hooks/**/*.tsx",
+    "worker/**/*.ts",
+    "types/**/*.d.ts",
+    ".source/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "*.ts",
+    "*.tsx",
+    "*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next",
+    "docs",
+    "lib/api-client"
+  ]
+}

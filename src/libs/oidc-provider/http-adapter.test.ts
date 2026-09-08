@@ -96,6 +96,10 @@ describe('OIDC HTTP adapter', () => {
       const ctx: SelectiveBodyContext = {
         charset: 'utf-8',
         is: (contentType: string) => contentType === 'application/x-www-form-urlencoded',
+        // oidc-provider >= 9.12.1 short-circuits `urlencoded` unless the context
+        // reports a POST, so the fixture has to carry the method a real Koa
+        // context always has.
+        method: 'POST',
         oidc: {},
         req: nodeRequest,
         request: { length: Buffer.byteLength(body) },
