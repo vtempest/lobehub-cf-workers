@@ -76,7 +76,8 @@ bunx wrangler kv namespace create VINEXT_CACHE
 bunx wrangler kv namespace create APP_CACHE
 bunx wrangler r2 bucket create lobehub-files
 
-# 2. Paste the returned ids into wrangler.jsonc (replace the REPLACE_WITH_… placeholders)
+# 2. Paste the returned ids into wrangler.jsonc (replace the REPLACE_WITH_… placeholders).
+#    In CI, set them as environment variables instead — see "Binding ids in CI".
 
 # 3. Apply the schema
 bun run db:migrate:local   # local miniflare copy
@@ -108,10 +109,76 @@ bun run dev              # vinext dev (miniflare bindings)
 bun run build            # build the Worker + client assets
 bun run preview          # build, then serve with wrangler dev
 bun run deploy           # build and deploy
+bun run upload           # build and upload a version without deploying it
+bun run cf:deploy        # deploy an already-built dist/ (no build step)
+bun run cf:upload        # upload an already-built dist/ as a version
 bun run typecheck        # tsc --noEmit
 bun run db:generate      # regenerate migrations from lib/db/schema.ts
 bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 ```
+
+Each has a passthrough at the repository root (`bun run web:dev`,
+`web:build`, `web:deploy`, `web:upload`, `web:preview`, `web:db:migrate`), so
+CI never has to `cd` into this directory.
+
+## Deploying
+
+This app is a Worker **built by Vite**, not a directory of static files. Its
+`wrangler.jsonc` declares `main` and an `ASSETS` binding, but the assets
+directory is filled in at build time by `@cloudflare/vite-plugin`, which writes
+`dist/lobehub-web/wrangler.json` plus a `.wrangler/deploy/config.json` pointing
+at it. So **Wrangler must run inside `apps/web`, and only after a build** —
+`wrangler deploy` walks up from the working directory to find that redirect.
+
+Running Wrangler at the repository root fails before it uploads anything:
+
+```text
+✘ [ERROR] Missing entry-point to Worker script or to assets directory
+```
+
+There is no Wrangler config at the repository root, so nothing supplies `main`
+or `assets.directory`. Nothing further up the log — peer-dependency warnings,
+blocked postinstalls, `npm warn Unknown project config` — is related; the
+`npm warn` lines only mean `npx` was used in a repository configured for pnpm.
+
+### Workers Builds
+
+In **Workers & Pages → your Worker → Settings → Build**:
+
+| Setting | Value |
+| --- | --- |
+| Root directory | *(leave empty — the pnpm workspace must install from the repo root)* |
+| Build command | `bun run web:build` |
+| Deploy command | `bun run web:deploy` |
+| Non-production branch deploy command | `bun run web:upload` |
+
+The defaults (`npx wrangler deploy` / `npx wrangler versions upload` with no
+build command) cannot work here: they run at the root directory and skip the
+build. `web:deploy` and `web:upload` build first, so they are also correct on
+their own if you leave the build command empty.
+
+### Binding ids in CI
+
+`wrangler.jsonc` is committed with `REPLACE_WITH_…` placeholders, since the D1
+and KV ids are account-specific. Paste your own ids in for local work, or set
+them as build environment variables and leave the file alone:
+
+| Variable | Fills |
+| --- | --- |
+| `CLOUDFLARE_D1_DATABASE_ID` | `d1_databases[DB].database_id` |
+| `CLOUDFLARE_KV_VINEXT_CACHE_ID` | `kv_namespaces[VINEXT_CACHE].id` |
+| `CLOUDFLARE_KV_APP_CACHE_ID` | `kv_namespaces[APP_CACHE].id` |
+
+`scripts/resolve-wrangler-config.mjs` substitutes them into a gitignored
+`wrangler.generated.jsonc` that `vite.config.ts` builds from. With none set it
+is a no-op. The ids have to be right at *build* time, not deploy time — the Vite
+plugin bakes the bindings into `dist/lobehub-web/wrangler.json`, and that is
+what gets uploaded.
+
+A deploy with the placeholders still in place fails on the invalid ids rather
+than on the entry point, so create the resources first (see [Setup](#setup)).
+`send_email` has the same property: it is rejected unless the account has an
+Email Routing zone — drop that block if yours does not.
 
 ## Notes on what was removed from the starter
 

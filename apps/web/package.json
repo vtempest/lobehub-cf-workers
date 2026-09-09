@@ -7,8 +7,10 @@
   "type": "module",
   "scripts": {
     "build": "vinext build",
-    "check": "bun run typecheck",
+    "cf:deploy": "wrangler deploy",
     "cf:typegen": "wrangler types --path types/worker-configuration.d.ts",
+    "cf:upload": "wrangler versions upload",
+    "check": "bun run typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply lobehub --remote",
     "db:migrate:local": "wrangler d1 migrations apply lobehub --local",
@@ -18,7 +20,8 @@
     "docs:generate": "fumadocs-mdx",
     "postinstall": "fumadocs-mdx",
     "preview": "vinext build && wrangler dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "upload": "vinext build && wrangler versions upload"
   },
   "dependencies": {
     "@better-auth/stripe": "^1.4.7",
