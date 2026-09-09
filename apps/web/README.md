@@ -101,6 +101,23 @@ surface that outcome rather than swallowing it. If your account has no Email
 Routing zone, delete the `send_email` block from `wrangler.jsonc` or `wrangler
 deploy` will reject the config.
 
+### Cloudflare Workers Builds
+
+Workers Builds reads the Node version from `.nvmrc`, and its tool installer only
+accepts an exact version — an nvm alias such as `lts/krypton` fails at
+`Installing nodejs` before a single dependency is fetched. The repo root and
+`apps/web` both pin `24.20.0` (the current Krypton LTS release); keep the two in
+sync when bumping, or override them with a `NODE_VERSION` build variable in the
+project settings.
+
+Project settings for a build of this app:
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `apps/web` |
+| Build command | `pnpm run build` |
+| Deploy command | `pnpm exec wrangler deploy` |
+
 ## Commands
 
 ```bash
