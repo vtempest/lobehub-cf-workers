@@ -23,8 +23,6 @@
     "dev": "LOBEHUB_CLI_HOME=.lobehub-dev bun src/index.ts",
     "man:generate": "bun src/man/generate.ts",
     "prepublishOnly": "npm run build && npm run man:generate",
-    "test": "bunx vitest run --config vitest.config.mts --silent='passed-only'",
-    "test:coverage": "bunx vitest run --config vitest.config.mts --coverage",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

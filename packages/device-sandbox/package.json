@@ -8,10 +8,7 @@
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "scripts": {
-    "test": "bunx vitest run --silent='passed-only'",
-    "test:coverage": "bunx vitest run --coverage"
-  },
+  "scripts": {},
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.66"
   },

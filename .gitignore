@@ -85,10 +85,7 @@ next-env.d.ts
 # Vercel
 .vercel/
 
-# Testing and CI
-coverage/
-.coverage/
-.nyc_output/
+# Lint caches
 .eslintcache
 .stylelintcache
 
@@ -143,10 +140,8 @@ scripts/clerk-to-betterauth/prod/*.json
 *.ppt*
 *.doc*
 *.xls*
-e2e/reports
 out
 i18n-unused-keys-report.json
-.vitest-reports
 
 pnpm-lock.yaml
 .turbo

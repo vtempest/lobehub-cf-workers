@@ -6,7 +6,5 @@
     ".": "./src/index.ts"
   },
   "main": "./src/index.ts",
-  "scripts": {
-    "test": "vitest"
-  }
+  "scripts": {}
 }

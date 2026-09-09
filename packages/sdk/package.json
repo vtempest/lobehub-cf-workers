@@ -11,9 +11,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "generate": "bun scripts/generate-sdk.ts",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --silent='passed-only'"
+    "generate": "bun scripts/generate-sdk.ts"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",

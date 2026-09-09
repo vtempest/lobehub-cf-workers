@@ -9,7 +9,12 @@ Guidelines for using AI coding agents in this opensource LobeHub repository.
 - `@lobehub/ui`, antd, and antd-style for UI implementation
 - react-i18next for i18n; zustand for state management
 - SWR for data fetching; TRPC for type-safe backend
-- Drizzle ORM with PostgreSQL; Vitest for testing
+- Drizzle ORM with PostgreSQL
+
+> **No test suite in this repository.** The unit/integration/e2e suites were
+> removed — see [`FOLDERS.md`](./FOLDERS.md). Do not add `*.test.ts`,
+> `__tests__/`, or `vitest.config.*` files back without agreeing on it first;
+> verify changes with `bun run check --lint --type` and by running the app.
 
 ## Agent Skills
 
@@ -48,8 +53,11 @@ lobehub/
 │   ├── services/           # Client services
 │   ├── libs/               # Shared client/server helpers for the app shell
 │   └── ...
-└── e2e/                    # E2E tests (Cucumber + Playwright)
+└── docs/                   # MDX documentation source
 ```
+
+Every folder in the repository has a one-line description in
+[`FOLDERS.md`](./FOLDERS.md) — read that first when locating code.
 
 ## SPA Routes and Features
 
@@ -68,7 +76,7 @@ When adding or changing SPA routes:
 1. In `src/routes/`, add only the route segment files (layout + page) that delegate to features.
 2. Implement layout and page content under `src/features/<Domain>/` and export from there.
 3. In route files, use `import { X } from '@/features/<Domain>'` (or `import Y from '@/features/<Domain>/...'`). Do not add new `features/` folders inside `src/routes/`.
-4. **Register shared desktop content routes once:** add common Web/Electron paths, nesting, metadata, lazy loaders, and `preloadId` values in `src/spa/router/desktopRouter.shared.tsx`. The thin `desktopRouter.config.tsx` and `desktopRouter.config.desktop.tsx` files contain only runtime differences: Web mounts the content tree directly, while Electron keeps slim root stubs and mounts the same tree in per-tab memory routers through `src/spa/router/tabRouter.tsx`. Add code to a platform adapter only when the route is genuinely platform-specific. `desktopRouter.sync.test.tsx` guards the shared behavior and explicit differences — keep it passing.
+4. **Register shared desktop content routes once:** add common Web/Electron paths, nesting, metadata, lazy loaders, and `preloadId` values in `src/spa/router/desktopRouter.shared.tsx`. The thin `desktopRouter.config.tsx` and `desktopRouter.config.desktop.tsx` files contain only runtime differences: Web mounts the content tree directly, while Electron keeps slim root stubs and mounts the same tree in per-tab memory routers through `src/spa/router/tabRouter.tsx`. Add code to a platform adapter only when the route is genuinely platform-specific. Keep the Web and Electron adapters in sync by hand: any route added to the shared tree must resolve on both.
 
 See the **spa-routes** skill for the full convention and file-division rules.
 
@@ -121,12 +129,10 @@ Open this URL to develop locally against the production backend (app.lobehub.com
 bun run check [changed-files...]
 ```
 
-- Every bug fix must include a corresponding regression test that fails before the fix and passes after it. **Skip** when the fix is pure style/CSS (selector, hover, mask, spacing, color) and the only practical assertion would be source-string matching on the stylesheet — that is not a regression test worth shipping.
-- No selector = **lint + test in a single pass** — run it once; don't fire a separate pass per selector. `--lint` / `--test` / `--type` narrow scope and are composable within one run. Default files = all working-tree changes (staged + unstaged + untracked); explicit paths override.
 - `--lint` auto-fixes the given files and prints the applied fixes as a diff, so you can review what changed.
-- `--test` auto-discovers the related tests for the given source files and runs them under the nearest owning vitest config (e.g. `packages/database`) — no need to `cd` into packages.
-- `--type` runs the full type-check. NEVER run `bun run test` — the full suite takes \~10 minutes.
-- To run tests manually (e.g. a single file or unusual flags), `cd` into the owning package first: `cd packages/database && bunx vitest run --silent='passed-only' '[file-path]'`.
+- `--type` runs the full type-check.
+- `--test` has nothing to run — the suites were removed. Verify behaviour changes by building and exercising the app instead (`bun run dev:spa`, or `pnpm --filter @lobehub/web dev` for the Cloudflare Workers app).
+- Default files = all working-tree changes (staged + unstaged + untracked); explicit paths override.
 
 ### i18n
 
