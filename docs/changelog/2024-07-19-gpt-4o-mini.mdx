@@ -12,36 +12,20 @@ tags:
 
 # LobeHub v1.6: GPT-4o Mini Joins the Default Lineup
 
-OpenAI's full model family has moved to GPT-4. LobeHub v1.6 follows that shift, adding GPT-4o mini to the supported models. For LobeHub Cloud users, this upgrade goes further: GPT-4o mini is now the default, replacing GPT-3.5-turbo.
+## Features
 
-The result is stronger conversations from your first message, without any configuration changes.
+- **GPT-4o mini support.** OpenAI's full model family has moved to GPT-4, and v1.6 follows by adding GPT-4o mini to the supported models.
+- **GPT-4o mini as the Cloud default.** LobeHub Cloud replaces GPT-3.5-turbo with GPT-4o mini, so conversations start stronger from the first message with no configuration change.
+- **GPT-4-level intelligence at a smaller scale.** Fast enough for real-time interaction and capable enough for everyday drafting, analysis, coding help, and creative work — better reasoning than GPT-3.5 without the latency of full GPT-4o, a cost-effective default for high-volume conversations, and strong instruction following and tool use.
+- **Full capability still one switch away.** Move to full GPT-4o, Claude 3.5 Sonnet, or Gemini 1.5 Pro when a task needs maximum capability.
+- **Automatic Cloud upgrade.** New conversations start on GPT-4o mini and the model switcher shows the new default first, so existing users change nothing. Cloud now offers GPT-4o mini (default), GPT-4o, Claude 3.5 Sonnet, and Gemini 1.5 Pro.
 
-## GPT-4o Mini: Capable and Cost-Effective
+## Improvements
 
-GPT-4o mini brings GPT-4-level intelligence at a smaller scale. It's fast enough for real-time interactions and capable enough for most everyday tasks—drafting, analysis, coding help, and creative work.
+- **GPT-4o mini configuration.** Model configuration and parameter defaults ship with the model.
+- **Cloud default model logic updated.** Default model selection picks up the new lineup.
+- **Recommended options stand out.** The model switcher highlights recommended models.
 
-Use GPT-4o mini when you want:
+## Fixes
 
-- Better reasoning than GPT-3.5 without the latency of full GPT-4o
-- A cost-effective default for high-volume conversations
-- Strong performance on instruction following and tool use
-
-Switch to full GPT-4o or other providers (Claude 3.5 Sonnet, Gemini 1.5 Pro) when you need maximum capability for complex reasoning tasks.
-
-## Cloud Service: Upgraded Defaults
-
-For LobeHub Cloud users, the service upgrade is automatic. New conversations start with GPT-4o mini by default. Existing users don't need to change any settings—the model switcher simply shows the new default first.
-
-Cloud now supports:
-
-- GPT-4o mini (default)
-- GPT-4o
-- Claude 3.5 Sonnet
-- Gemini 1.5 Pro
-
-## Improvements and fixes
-
-- Added GPT-4o mini model configuration and parameter defaults
-- Updated LobeHub Cloud default model selection logic
-- Improved model switcher UI to highlight recommended options
-- Fixed edge cases in streaming responses for newer OpenAI models
+- **Streaming edge cases on newer OpenAI models.** Streaming responses no longer break in those cases.

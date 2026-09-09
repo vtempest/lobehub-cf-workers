@@ -11,46 +11,22 @@ tags:
 
 # Prompt Variables and Claude 4 Reasoning Model Support
 
-From May through June, LobeHub focused on making repeated workflows easier to run. Prompt variables let you reuse prompt structures with different inputs. Claude 4 support brings the latest reasoning capabilities with integrated web search. Expanded crawling and file handling round out the update.
+## Features
 
-## Reusable prompts with variables
+- **Prompt variables.** Placeholder variables work in prompts and the input box, so one prompt structure can be reused with different dynamic values instead of being edited by hand each time. Variables use simple syntax and are filled in at runtime.
+- **Where variables help.** Templates that need a name, date, or topic inserted; structured analysis where only the source material changes; and repeated workflows with consistent formatting but variable content.
+- **Claude 4 reasoning models.** Anthropic Claude 4 is fully integrated, including Web Search tool support and Beta Header compatibility, so you can run complex reasoning with transparent chain-of-thought, combine reasoning with live web retrieval in one conversation, and pick up new Claude capabilities as they land.
+- **ModelScope provider.** Another provider joins the lineup without changing how you work.
+- **Wider search and crawling coverage.** Support is extended across more platforms for better content coverage.
+- **File uploads in chat context.** Reference documents and spreadsheets inside an ongoing conversation, with improved PDF and XLSX parsing.
+- **Protected page access.** Sensitive workflows can be gated behind sign-in.
 
-You can now use placeholder variables in prompts and the input box. The same prompt structure can be reused with different dynamic values, reducing manual editing when you run similar tasks repeatedly.
+## Improvements
 
-In practice, this works well for:
-
-- Templates that need a name, date, or topic inserted each time
-- Structured analysis where only the source material changes
-- Repeated workflows with consistent formatting but variable content
-
-Variables are defined with simple syntax and filled in at runtime, so you spend less time retyping and more time getting results.
-
-## Claude 4 with web search and beta features
-
-Anthropic Claude 4 reasoning models are now fully integrated. The implementation includes Web Search tool support and Beta Header compatibility, so Claude 4 can use the same reasoning and retrieval capabilities that power other advanced workflows.
-
-This means you can:
-
-- Run complex reasoning tasks with transparent chain-of-thought
-- Combine reasoning with live web retrieval in a single conversation
-- Access the latest Claude capabilities as they become available
-
-## Broader provider and content support
-
-ModelScope joins the provider lineup, expanding the range of models available without changing how you work. Search and crawling support has been extended across more platforms for better content coverage.
-
-File uploads now work directly in chat context, with improved parsing for PDF and XLSX files. This makes it easier to reference documents and spreadsheets within ongoing conversations.
-
-## Access control and security improvements
-
-Protected page access has been added for sensitive workflows. Clerk middleware route protection has been improved to handle authentication edge cases more reliably.
-
-## Improvements and fixes
-
-- Enhanced PDF and XLSX content extraction accuracy
-- Improved file upload handling in chat context
-- Better route protection for authenticated pages
-- Provider-specific optimizations for Claude 4 token handling
+- **PDF and XLSX extraction accuracy.** Content extraction is more reliable.
+- **File upload handling in chat.** Uploads behave more predictably inside a conversation.
+- **Route protection for authenticated pages.** Clerk middleware handles authentication edge cases more reliably.
+- **Claude 4 token handling.** Provider-specific optimizations keep token accounting correct.
 
 ## Credits
 
