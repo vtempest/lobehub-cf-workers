@@ -1,0 +1,473 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LobeHub API",
+    "version": "0.1.0",
+    "description": "The LobeHub HTTP API, served from Cloudflare Workers. Requests are authenticated with the session cookie set by /api/auth, or with a personal API key as a bearer token."
+  },
+  "servers": [{ "url": "/", "description": "This deployment" }],
+  "security": [{ "BearerAuth": [] }, { "SessionCookie": [] }],
+  "tags": [
+    { "name": "Chat", "description": "Conversations, messages and streaming turns" },
+    { "name": "Agents", "description": "Reusable agent configurations" },
+    { "name": "Files", "description": "Attachments stored in R2" },
+    { "name": "Account", "description": "Settings and API keys" }
+  ],
+  "paths": {
+    "/api/chat": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Send a message and stream the reply",
+        "description": "Streams Server-Sent Events. Frames are `start`, `delta`, `title`, `done` and `error`. Both turns are persisted; a failed generation is stored as an assistant message carrying `error`. Rate limited to 30 turns per minute per user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string" },
+                  "conversationId": {
+                    "type": "string",
+                    "description": "Omit to start a new thread; the id arrives on the `start` frame."
+                  },
+                  "agentId": { "type": "string" },
+                  "model": { "type": "string", "description": "One of the ids from /api/models." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "An SSE stream of chat events",
+            "content": { "text/event-stream": { "schema": { "type": "string" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "List the caller's conversations",
+        "responses": {
+          "200": {
+            "description": "Conversations, pinned first and then most recently active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Conversation" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create a conversation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "agentId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Conversation" } }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/conversations/{id}": {
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Fetch a conversation and its transcript",
+        "responses": {
+          "200": {
+            "description": "The conversation and its messages, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "conversation": { "$ref": "#/components/schemas/Conversation" },
+                        "messages": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Message" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Chat"],
+        "summary": "Rename, pin or archive a conversation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "pinned": { "type": "boolean" },
+                  "archived": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Chat"],
+        "summary": "Delete a conversation and its messages",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/agents": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "List the caller's agents",
+        "responses": {
+          "200": {
+            "description": "Agents, most recently updated first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Agent" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Agents"],
+        "summary": "Create an agent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "systemRole": { "type": "string" },
+                  "model": { "type": "string" },
+                  "temperature": { "type": "number" },
+                  "maxTokens": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Agent" } }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "List the available Workers AI chat models",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The model catalog and the default model id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Model" } },
+                    "default": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files": {
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload a file",
+        "description": "Stores the bytes in R2 and the metadata in D1. Limited to 25 MB.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "conversationId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/FileRecord" } }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "413": { "description": "File exceeds the 25 MB limit" }
+        }
+      }
+    },
+    "/api/files/{id}": {
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "tags": ["Files"],
+        "summary": "Download a file",
+        "responses": {
+          "200": {
+            "description": "The stored object",
+            "content": { "application/octet-stream": { "schema": { "type": "string", "format": "binary" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Files"],
+        "summary": "Delete a file and its stored object",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/user/settings": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "Read the caller's settings",
+        "description": "Provider keys come back masked, never in cleartext.",
+        "responses": {
+          "200": { "description": "Settings, with provider keys masked" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Account"],
+        "summary": "Update the caller's provider keys",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/user/api-key/regenerate": {
+      "post": {
+        "tags": ["Account"],
+        "summary": "Issue a new personal API key",
+        "description": "Replaces any existing key immediately; the old one stops working.",
+        "responses": {
+          "200": {
+            "description": "The new key, returned once",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "apiKey": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A personal API key from /api/user/api-key/regenerate."
+      },
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "better-auth.session_token"
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "The operation succeeded",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "success": { "type": "boolean" } } }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "The request was malformed",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Unauthorized": {
+        "description": "No valid session or API key",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotFound": {
+        "description": "No such resource for this caller",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "agentId": { "type": ["string", "null"] },
+          "title": { "type": "string" },
+          "pinned": { "type": "boolean" },
+          "archived": { "type": "boolean" },
+          "lastMessageAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "conversationId": { "type": "string" },
+          "role": { "type": "string", "enum": ["user", "assistant", "system", "tool"] },
+          "content": { "type": "string" },
+          "model": { "type": ["string", "null"] },
+          "error": {
+            "type": ["string", "null"],
+            "description": "Set when the generation failed; the turn is kept so the transcript shows what happened."
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "model": { "type": "string" },
+          "systemRole": { "type": ["string", "null"] },
+          "temperature": { "type": ["number", "null"] },
+          "maxTokens": { "type": ["integer", "null"] },
+          "isPublic": { "type": "boolean" }
+        }
+      },
+      "Model": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "displayName": { "type": "string" },
+          "description": { "type": "string" },
+          "contextWindow": { "type": "integer" }
+        }
+      },
+      "FileRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "contentType": { "type": "string" },
+          "size": { "type": "integer" },
+          "url": { "type": "string" },
+          "conversationId": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

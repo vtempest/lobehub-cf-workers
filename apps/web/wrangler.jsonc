@@ -20,6 +20,12 @@
   // D1 — the only datastore. Create it with:
   //   bunx wrangler d1 create lobehub
   // then paste the returned database_id below.
+  //
+  // Reads go through the Sessions API (lib/db/d1-session.ts), the same
+  // architecture QwkSearch uses, so enabling read replication on this database
+  // is a dashboard switch with no code change:
+  //   bunx wrangler d1 read-replication enable lobehub
+  // Until then the Sessions API is a no-op and every query hits the primary.
   // ---------------------------------------------------------------------
   "d1_databases": [
     {
@@ -84,6 +90,16 @@
 
   "vars": {
     "APP_NAME": "LobeHub",
+
+    // How D1 sessions start, so read replication can be tuned — or rolled
+    // back — from the dashboard without a redeploy. See lib/db/d1-session.ts.
+    //   auto (default)  resume from the client's bookmark, else primary for
+    //                   writes and any replica for reads
+    //   primary         always start on the primary
+    //   unconstrained   always start anywhere (lowest latency, weakest freshness)
+    //   off             bypass the Sessions API entirely
+    // `/api/auth/*` always starts on the primary regardless, except under `off`.
+    "D1_SESSION_MODE": "auto",
   },
 
   "observability": {

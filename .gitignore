@@ -65,6 +65,10 @@ public/_spa-workbench/
 public/spa/
 es/
 lib/
+# `lib/` above is a build-output rule (father/dumi emit es/ + lib/), but it also
+# matches source directories named `lib`. apps/web keeps its server code there,
+# so it is exempted rather than committed with `git add -f` each time.
+!apps/web/lib/
 .next/
 logs/
 test-output/
