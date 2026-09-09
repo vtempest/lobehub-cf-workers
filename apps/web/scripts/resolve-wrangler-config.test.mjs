@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolveWranglerConfig, unresolvedBindingIds } from './resolve-wrangler-config.mjs';
+import { resolveWranglerConfig, staleSubstitutions } from './resolve-wrangler-config.mjs';
 
 const generated = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -30,13 +30,11 @@ describe('resolveWranglerConfig', () => {
 
     expect(resolved).toBe(generated);
 
-    // The two bindings are separate namespaces; a shared placeholder would have
-    // pointed the ISR cache and the app cache at the same KV store.
+    // The two bindings are separate namespaces; overriding one must not move
+    // the other, or the ISR cache and the app cache share a KV store.
     const config = readFileSync(resolved, 'utf8');
     expect(config).toContain('"id": "vinext-cache-id"');
     expect(config).toContain('"id": "app-cache-id"');
-    expect(config).not.toContain('REPLACE_WITH_YOUR_VINEXT_CACHE_KV_ID');
-    expect(config).not.toContain('REPLACE_WITH_YOUR_APP_CACHE_KV_ID');
   });
 
   it('substitutes the D1 database id independently of the KV ids', () => {
@@ -46,23 +44,16 @@ describe('resolveWranglerConfig', () => {
     );
 
     expect(config).toContain('"database_id": "d1-id"');
-    expect(config).toContain('REPLACE_WITH_YOUR_VINEXT_CACHE_KV_ID');
+    expect(config).toContain('"binding": "VINEXT_CACHE"');
+    expect(config).not.toContain('"id": "d1-id"');
   });
 });
 
-describe('unresolvedBindingIds', () => {
-  it('names every binding whose id neither the config nor the environment supplies', () => {
-    const unresolved = unresolvedBindingIds({});
-
-    expect(unresolved).toHaveLength(3);
-    expect(unresolved.join('\n')).toContain('D1 database "lobehub"');
-    expect(unresolved.join('\n')).toContain('CLOUDFLARE_KV_VINEXT_CACHE_ID');
-  });
-
-  it('counts an id supplied by the environment as resolved', () => {
-    const unresolved = unresolvedBindingIds({ CLOUDFLARE_D1_DATABASE_ID: 'd1-id' });
-
-    expect(unresolved).toHaveLength(2);
-    expect(unresolved.join('\n')).not.toContain('D1 database');
+describe('staleSubstitutions', () => {
+  // A re-created database or namespace changes the id in wrangler.jsonc; if the
+  // substitution table is not updated with it, the CI override quietly becomes
+  // a no-op and the build deploys against the wrong account's resources.
+  it('finds no override pointing at an id wrangler.jsonc no longer contains', () => {
+    expect(staleSubstitutions()).toEqual([]);
   });
 });

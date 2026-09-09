@@ -17,16 +17,17 @@
   },
 
   // ---------------------------------------------------------------------
-  // The REPLACE_WITH_… ids below are account-specific. Fill them in for local
-  // work, or leave them and let CI supply them as build environment variables
-  // (CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_KV_VINEXT_CACHE_ID,
-  // CLOUDFLARE_KV_APP_CACHE_ID) — see scripts/resolve-wrangler-config.mjs.
+  // The ids below name resources in this project's own Cloudflare account. A
+  // resource id is not a credential — it does nothing without an API token —
+  // so it is committed, the way Wrangler configs normally are. To build the
+  // same app against a different account, override them at build time with
+  // CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_KV_VINEXT_CACHE_ID and
+  // CLOUDFLARE_KV_APP_CACHE_ID — see scripts/resolve-wrangler-config.mjs.
   // ---------------------------------------------------------------------
 
   // ---------------------------------------------------------------------
-  // D1 — the only datastore. Create it with:
+  // D1 — the only datastore, created with:
   //   bunx wrangler d1 create lobehub
-  // then paste the returned database_id below.
   //
   // Reads go through the Sessions API (lib/db/d1-session.ts), the same
   // architecture QwkSearch uses, so enabling read replication on this database
@@ -38,7 +39,7 @@
     {
       "binding": "DB",
       "database_name": "lobehub",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "database_id": "059ea054-f709-4b4b-bb6e-dc25dc841ed5",
       "migrations_dir": "migrations",
     },
   ],
@@ -46,18 +47,18 @@
   // ---------------------------------------------------------------------
   // KV — VINEXT_CACHE backs ISR/fragment caching, APP_CACHE backs rate
   // limits and short-lived application caches. They are two separate
-  // namespaces; create both and paste the two distinct ids:
+  // namespaces, created with:
   //   bunx wrangler kv namespace create VINEXT_CACHE
   //   bunx wrangler kv namespace create APP_CACHE
   // ---------------------------------------------------------------------
   "kv_namespaces": [
     {
       "binding": "VINEXT_CACHE",
-      "id": "REPLACE_WITH_YOUR_VINEXT_CACHE_KV_ID",
+      "id": "cbaa860dd2894dc9ae496f290cc60d3d",
     },
     {
       "binding": "APP_CACHE",
-      "id": "REPLACE_WITH_YOUR_APP_CACHE_KV_ID",
+      "id": "7ca5e606272b4de5afcd5ee466d2cd34",
     },
   ],
 

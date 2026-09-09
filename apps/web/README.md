@@ -105,6 +105,10 @@ reload shows what happened instead of silently losing the turn.
 
 ## Setup
 
+The D1 database, both KV namespaces and the R2 bucket already exist in this
+project's Cloudflare account, and `wrangler.jsonc` names them — so steps 1 and 2
+are only for a fork or a second account.
+
 ```bash
 pnpm install
 
@@ -114,8 +118,9 @@ bunx wrangler kv namespace create VINEXT_CACHE
 bunx wrangler kv namespace create APP_CACHE
 bunx wrangler r2 bucket create lobehub-files
 
-# 2. Paste the returned ids into wrangler.jsonc (replace the REPLACE_WITH_… placeholders).
-#    In CI, set them as environment variables instead — see "Binding ids in CI".
+# 2. Paste the returned ids into wrangler.jsonc, over the ones committed there.
+#    In CI, override them with environment variables instead — see
+#    "Binding ids in CI".
 
 # 3. Apply the schema
 bun run db:migrate:local   # local miniflare copy
@@ -233,11 +238,14 @@ commands do not build, and every step after the missing `dist/` fails.
 
 ### Binding ids in CI
 
-`wrangler.jsonc` is committed with `REPLACE_WITH_…` placeholders, since the D1
-and KV ids are account-specific. Paste your own ids in for local work, or set
-them as build environment variables and leave the file alone:
+`wrangler.jsonc` carries the real D1 and KV ids. A resource id is not a
+credential — it is inert without an API token — so it is committed, the way
+Wrangler configs normally are, and a build needs no variables at all.
 
-| Variable | Fills |
+To build against a **different** account without editing the file, override
+them:
+
+| Variable | Replaces |
 | --- | --- |
 | `CLOUDFLARE_D1_DATABASE_ID` | `d1_databases[DB].database_id` |
 | `CLOUDFLARE_KV_VINEXT_CACHE_ID` | `kv_namespaces[VINEXT_CACHE].id` |
@@ -246,13 +254,14 @@ them as build environment variables and leave the file alone:
 `scripts/resolve-wrangler-config.mjs` substitutes them into a gitignored
 `wrangler.generated.jsonc` that `vite.config.ts` builds from. With none set it
 is a no-op. The ids have to be right at *build* time, not deploy time — the Vite
-plugin bakes the bindings into `dist/server/wrangler.json`, and that is
-what gets uploaded.
+plugin bakes the bindings into `dist/server/wrangler.json`, and that is what
+gets uploaded. Re-creating a resource therefore means changing the id in *both*
+`wrangler.jsonc` and that script's substitution table; a test fails if they
+drift apart.
 
-A deploy with the placeholders still in place fails on the invalid ids rather
-than on the entry point, so create the resources first (see [Setup](#setup)).
-`send_email` has the same property: it is rejected unless the account has an
-Email Routing zone — drop that block if yours does not.
+Bindings the account does not back are rejected at upload rather than at
+runtime: `send_email` needs an Email Routing zone and `images` needs Cloudflare
+Images — drop either block if yours has neither.
 
 ## Notes on what was removed from the starter
 

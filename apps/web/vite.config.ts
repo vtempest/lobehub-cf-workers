@@ -6,21 +6,15 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
-import {
-  resolveWranglerConfig,
-  warnUnresolvedBindingIds,
-} from "./scripts/resolve-wrangler-config.mjs";
+import { resolveWranglerConfig } from "./scripts/resolve-wrangler-config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const fumadocsPlugin = await fumadocs({ docs });
 
-// Undefined unless CI supplied the account-specific binding ids as build env
-// vars, in which case the plugin builds from the resolved copy instead.
+// Undefined unless CI overrode the committed binding ids with build env vars,
+// in which case the plugin builds from the resolved copy instead.
 const wranglerConfigPath = resolveWranglerConfig();
-
-// A placeholder id builds fine and is only rejected at upload, so say so here.
-warnUnresolvedBindingIds();
 
 // Intercept ?collection= JSON IDs so rolldown never tries to parse them as JS.
 // Phase 1 (load, enforce:pre): return raw JSON so fumadocs transform can parse it.
