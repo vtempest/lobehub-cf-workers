@@ -133,6 +133,7 @@
     "web:deploy": "pnpm --filter @lobehub/web deploy",
     "web:dev": "pnpm --filter @lobehub/web dev",
     "web:preview": "pnpm --filter @lobehub/web preview",
+    "web:upload": "pnpm --filter @lobehub/web upload",
     "workflow:cdn": "tsx ./scripts/cdnWorkflow/index.ts",
     "workflow:changelog": "tsx ./scripts/changelogWorkflow/index.ts",
     "workflow:changelog:gen": "tsx ./scripts/changelogWorkflow/generateChangelog.ts",
