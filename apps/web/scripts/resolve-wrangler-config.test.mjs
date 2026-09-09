@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolveWranglerConfig } from './resolve-wrangler-config.mjs';
+import { resolveWranglerConfig, unresolvedBindingIds } from './resolve-wrangler-config.mjs';
 
 const generated = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -47,5 +47,22 @@ describe('resolveWranglerConfig', () => {
 
     expect(config).toContain('"database_id": "d1-id"');
     expect(config).toContain('REPLACE_WITH_YOUR_VINEXT_CACHE_KV_ID');
+  });
+});
+
+describe('unresolvedBindingIds', () => {
+  it('names every binding whose id neither the config nor the environment supplies', () => {
+    const unresolved = unresolvedBindingIds({});
+
+    expect(unresolved).toHaveLength(3);
+    expect(unresolved.join('\n')).toContain('D1 database "lobehub"');
+    expect(unresolved.join('\n')).toContain('CLOUDFLARE_KV_VINEXT_CACHE_ID');
+  });
+
+  it('counts an id supplied by the environment as resolved', () => {
+    const unresolved = unresolvedBindingIds({ CLOUDFLARE_D1_DATABASE_ID: 'd1-id' });
+
+    expect(unresolved).toHaveLength(2);
+    expect(unresolved.join('\n')).not.toContain('D1 database');
   });
 });

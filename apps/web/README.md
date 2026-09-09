@@ -149,13 +149,8 @@ accepts an exact version — an nvm alias such as `lts/krypton` fails at
 sync when bumping, or override them with a `NODE_VERSION` build variable in the
 project settings.
 
-Project settings for a build of this app:
-
-| Setting | Value |
-| --- | --- |
-| Root directory | `apps/web` |
-| Build command | `pnpm run build` |
-| Deploy command | `pnpm exec wrangler deploy` |
+The build settings themselves are under [Deploying → Workers
+Builds](#workers-builds).
 
 ## Commands
 
@@ -176,43 +171,65 @@ bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 
 Each has a passthrough at the repository root (`bun run web:dev`,
 `web:build`, `web:deploy`, `web:upload`, `web:preview`, `web:db:migrate`), so
-CI never has to `cd` into this directory.
+CI never has to `cd` into this directory. `web:cf:build` additionally installs
+this app's dependencies — see [Workers Builds](#workers-builds).
 
 ## Deploying
 
 This app is a Worker **built by Vite**, not a directory of static files. Its
 `wrangler.jsonc` declares `main` and an `ASSETS` binding, but the assets
 directory is filled in at build time by `@cloudflare/vite-plugin`, which writes
-`dist/lobehub-web/wrangler.json` plus a `.wrangler/deploy/config.json` pointing
-at it. So **Wrangler must run inside `apps/web`, and only after a build** —
-`wrangler deploy` walks up from the working directory to find that redirect.
+`dist/server/wrangler.json` — the config that is actually uploaded — plus a
+`.wrangler/deploy/config.json` redirect pointing at it. **Wrangler therefore has
+to run after a build**: with no `dist/`, there is nothing to deploy.
 
-Running Wrangler at the repository root fails before it uploads anything:
+Wrangler finds that config by walking up from its working directory. `apps/web`
+gets the redirect from the build; the repository root has a committed one
+([`.wrangler/deploy/config.json`](../../.wrangler/deploy/config.json)) naming
+the same file, so a build followed by a bare `wrangler deploy` or `wrangler
+versions upload` works from either place. Without a build, both report:
 
 ```text
 ✘ [ERROR] Missing entry-point to Worker script or to assets directory
 ```
 
-There is no Wrangler config at the repository root, so nothing supplies `main`
-or `assets.directory`. Nothing further up the log — peer-dependency warnings,
-blocked postinstalls, `npm warn Unknown project config` — is related; the
-`npm warn` lines only mean `npx` was used in a repository configured for pnpm.
+Nothing further up such a log — peer-dependency warnings, blocked postinstalls,
+`npm warn Unknown project config` — is related; the `npm warn` lines only mean
+`npx` was used in a repository configured for pnpm.
 
 ### Workers Builds
 
-In **Workers & Pages → your Worker → Settings → Build**:
+In **Workers & Pages → your Worker → Settings → Build**. Either layout works;
+the first is what this app is meant to use.
+
+**Root directory `apps/web`** — installs this app's dependencies only (~15s)
+and leaves both deploy commands at their defaults:
 
 | Setting | Value |
 | --- | --- |
-| Root directory | *(leave empty — the pnpm workspace must install from the repo root)* |
-| Build command | `bun run web:build` |
-| Deploy command | `bun run web:deploy` |
-| Non-production branch deploy command | `bun run web:upload` |
+| Root directory | `apps/web` |
+| Build command | `bun run build` |
+| Deploy command | `npx wrangler deploy` *(default)* |
+| Non-production branch deploy command | `npx wrangler versions upload` *(default)* |
 
-The defaults (`npx wrangler deploy` / `npx wrangler versions upload` with no
-build command) cannot work here: they run at the root directory and skip the
-build. `web:deploy` and `web:upload` build first, so they are also correct on
-their own if you leave the build command empty.
+**Root directory at the repository root** — needs a build command that installs
+this app first, because the root `bun install` does not reach it: the root
+`package.json` `workspaces` array (what bun reads) does not list `apps/web`,
+only `pnpm-workspace.yaml` does.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | *(empty)* |
+| Build command | `bun run web:cf:build` |
+| Deploy command | `npx wrangler deploy` *(default)* |
+| Non-production branch deploy command | `npx wrangler versions upload` *(default)* |
+
+`web:cf:build` is `cd apps/web && bun install && bun run build`. The monorepo
+passthrough `bun run web:build` assumes the dependencies are already there, so
+it is the wrong build command for a fresh CI container.
+
+What cannot work either way is leaving the **build command empty**: the deploy
+commands do not build, and every step after the missing `dist/` fails.
 
 ### Binding ids in CI
 
@@ -229,7 +246,7 @@ them as build environment variables and leave the file alone:
 `scripts/resolve-wrangler-config.mjs` substitutes them into a gitignored
 `wrangler.generated.jsonc` that `vite.config.ts` builds from. With none set it
 is a no-op. The ids have to be right at *build* time, not deploy time — the Vite
-plugin bakes the bindings into `dist/lobehub-web/wrangler.json`, and that is
+plugin bakes the bindings into `dist/server/wrangler.json`, and that is
 what gets uploaded.
 
 A deploy with the placeholders still in place fails on the invalid ids rather
