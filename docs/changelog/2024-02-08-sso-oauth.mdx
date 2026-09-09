@@ -14,34 +14,24 @@ tags:
 
 # Authentication That Adapts to Your Stack
 
-Every product needs reliable sign-in, but not every team has the same requirements. Some need to get up and running quickly with social logins. Others need enterprise-grade controls from day one. LobeHub now supports both paths by integrating with next-auth and Clerk.
+## Features
 
-This gives teams the freedom to start simple and upgrade security when the time is right—without rethinking their entire auth architecture.
+- **Two authentication paths.** LobeHub integrates both next-auth and Clerk, so you can start simple with social logins and upgrade to enterprise-grade controls later without rethinking your auth architecture.
+- **Next-Auth for a fast start.** A straightforward authentication layer covering the essentials — OAuth from major providers, email login, and credential flows — with no separate user service to manage.
+- **Quick social sign-in setup.** Connect providers like GitHub or Google in minutes.
+- **Session management that just works.** Sessions are handled for you, with full control left over the sign-in UI and flow.
+- **Privacy-friendly auth.** User data stays in your own infrastructure.
+- **Clerk for enterprise identity.** A managed identity platform that goes past sign-in and scales with your product.
+- **Multi-factor authentication.** Protect sensitive accounts and meet compliance requirements.
+- **Built-in profile and account management.** User profile and account UI ships out of the box.
+- **Login activity tracking.** Monitor sign-in activity in real time.
+- **Scalable identity without ops overhead.** Identity infrastructure grows with usage instead of needing to be run.
 
-## Next-Auth: Start Fast, Stay Flexible
+## Improvements
 
-Next-Auth provides a straightforward authentication layer for teams that want to ship quickly. It handles the essentials: OAuth from major providers, email-based login, and credential-based flows, all without managing a separate user service.
+- **next-auth v5 beta support.** Session handling is improved on the new major version.
+- **Clearer OAuth errors.** Failed OAuth connections now explain what went wrong.
 
-Use this when you need:
+## Fixes
 
-- Quick setup with social providers like GitHub or Google
-- Session management that just works
-- Full control over the sign-in UI and flow
-- Privacy-friendly auth that keeps user data in your infrastructure
-
-## Clerk: Enterprise-Ready Identity
-
-When you need more than sign-in—multi-factor authentication, user profiles, and login activity monitoring—Clerk provides those capabilities out of the box. It's a managed identity platform that scales with your product.
-
-Switch to Clerk when you need:
-
-- MFA for sensitive accounts or compliance requirements
-- Built-in user profile and account management UI
-- Real-time login activity tracking
-- Scalable identity infrastructure without operational overhead
-
-## Improvements and fixes
-
-- Added support for next-auth v5 beta with improved session handling
-- Fixed redirect loop issues when using custom sign-in pages
-- Improved error messages for failed OAuth connections
+- **Custom sign-in pages no longer loop.** The redirect loop that hit custom sign-in pages is fixed.
