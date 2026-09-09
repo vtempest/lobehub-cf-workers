@@ -14,7 +14,13 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
     <div className="flex h-screen overflow-hidden">
       <aside className="hidden w-64 shrink-0 border-r md:block">
         <ConversationList
-          conversations={conversations.map(({ id, pinned, title }) => ({ id, pinned, title }))}
+          // `pinned` is nullable in the schema (SQLite column default, no NOT
+          // NULL); the list only cares whether it is set.
+          conversations={conversations.map(({ id, pinned, title }) => ({
+            id,
+            pinned: pinned ?? false,
+            title,
+          }))}
         />
       </aside>
       <main className="min-w-0 flex-1">{children}</main>

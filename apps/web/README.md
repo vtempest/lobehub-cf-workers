@@ -23,10 +23,10 @@ billing endpoints fail with an explanatory error and nothing else is affected.
 ## Architecture
 
 `worker/index.ts` is the only entry point. On each request it publishes `env` to
-`lib/cf/bindings.ts`, wires the KV-backed ISR cache, handles image optimization,
-and hands everything else to vinext's App Router runtime. Because bindings are
-constant per isolate, any server module can call `getBindings()` without `env`
-being threaded through it.
+`lib/cf/bindings.ts`, opens a D1 session, wires the KV-backed ISR cache, handles
+image optimization, and hands everything else to vinext's App Router runtime.
+Because bindings are constant per isolate, any server module can call
+`getBindings()` without `env` being threaded through it.
 
 ```
 app/                 App Router pages and API routes
@@ -39,12 +39,50 @@ app/                 App Router pages and API routes
 components/chat/     Chat components
 hooks/               use-chat-stream — client for the SSE protocol
 lib/cf/bindings.ts   Typed binding accessor
-lib/db/              Drizzle schema + D1 client
+lib/db/              Drizzle schema + D1 client + Sessions-API wrapper
 lib/ai/              Model catalog + Workers AI client
 lib/email/           MIME builder, templates, send_email binding
 lib/chat/            Repository, stream protocol, title generation
 migrations/          D1 migrations (drizzle-kit)
 worker/index.ts      Worker entry
+```
+
+### D1 read replication
+
+Data access uses the same architecture as QwkSearch: `lib/db/d1-session.ts` is a
+port of that app's module and is kept behaviourally identical, so a fix in one
+belongs in the other.
+
+With read replication enabled, D1 answers reads from a replica near the request
+rather than from the single primary — the win is round trips, not query time. A
+replica can lag, so every request runs inside one *session*: queries carry a
+bookmark, and D1 only serves the session a version at least as new as everything
+it has already seen. One request therefore gets one consistent view of the
+database no matter which replica answers.
+
+```
+worker/index.ts        runWithD1Session(request, env.D1_SESSION_MODE, …)
+  lib/db/index.ts        drizzle(sessionedD1(env.DB))   ← every query in the request
+worker/index.ts        applyD1Bookmark(response)        → x-d1-bookmark + d1_bookmark cookie
+```
+
+The client hands the closing bookmark back on its next request (header for API
+clients, cookie for navigations), so reads never go backwards. `/api/auth/*` is
+the exception and always starts on the primary: OAuth state and magic-link
+tokens are written by one request and read by a different one seconds later,
+often with no bookmark to resume from, and a lagging replica turns that into a
+failed sign-in rather than a stale render.
+
+`D1_SESSION_MODE` (a plain var, changeable from the dashboard without a
+redeploy) tunes this: `auto` (default), `primary`, `unconstrained`, or `off` to
+bypass the Sessions API entirely as a rollback switch. Set `D1_SESSION_DEBUG=1`
+to have responses carry `x-d1-served-by-region` and `x-d1-served-by-primary`.
+
+The Sessions API is a no-op on a database with replication turned off, so all of
+this is safe to deploy before — and independently of — enabling it:
+
+```bash
+bunx wrangler d1 read-replication enable lobehub
 ```
 
 ### Chat streaming
@@ -130,6 +168,8 @@ bun run upload           # build and upload a version without deploying it
 bun run cf:deploy        # deploy an already-built dist/ (no build step)
 bun run cf:upload        # upload an already-built dist/ as a version
 bun run typecheck        # tsc --noEmit
+bun run test             # vitest run (lib/ unit tests)
+bun run check            # typecheck + tests
 bun run db:generate      # regenerate migrations from lib/db/schema.ts
 bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 ```
