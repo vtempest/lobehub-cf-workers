@@ -13,7 +13,7 @@
     "@lobechat/const": "workspace:*",
     "@lobechat/prompts": "workspace:*",
     "@lobechat/utils": "workspace:*",
-    "type-fest": "^4.41.0"
+    "type-fest": "^5.9.0"
   },
   "devDependencies": {
     "@lobechat/types": "workspace:*"

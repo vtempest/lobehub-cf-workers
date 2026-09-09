@@ -25,19 +25,19 @@
     "test:coverage": "vitest --coverage --silent='passed-only'"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.9.10",
+    "@xmldom/xmldom": "^0.9.12",
     "concat-stream": "^2.0.0",
     "debug": "^4.4.3",
-    "mammoth": "^1.12.0",
-    "officeparser": "5.1.1",
-    "pdfjs-dist": "5.4.530",
+    "mammoth": "^1.12.2",
+    "officeparser": "7.8.0",
+    "pdfjs-dist": "6.3.289",
     "word-extractor": "^1.0.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "yauzl": "^3.4.0"
   },
   "devDependencies": {
     "@types/concat-stream": "^2.0.3",
-    "@types/yauzl": "^2.10.3",
+    "@types/yauzl": "^3.4.0",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {

@@ -27,7 +27,7 @@
     "@lobechat/const": "workspace:*",
     "@lobechat/model-runtime": "workspace:*",
     "@lobechat/utils": "workspace:*",
-    "i18next": "^24.2.3"
+    "i18next": "^26.4.2"
   },
   "devDependencies": {
     "@lobechat/types": "workspace:*"

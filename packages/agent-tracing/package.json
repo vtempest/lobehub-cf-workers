@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "@lobechat/eval-rubric": "workspace:*",
-    "commander": "^13.1.0",
-    "gpt-tokenizer": "^3.4.0",
+    "commander": "^15.0.0",
+    "gpt-tokenizer": "^4.0.0",
     "model-bank": "workspace:*"
   },
   "devDependencies": {
