@@ -12,30 +12,23 @@ tags:
 
 # Persistent Agent Sidebar: Faster Access, Less Context Switching
 
-In v1.26.0, LobeHub adds a persistent Agent sidebar to make high-frequency Agents easier to reach during active conversations. Instead of jumping between lists, you can keep your key Agents visible and switch with less friction.
+## Features
 
-## Tighter conversation workflow
-
-This update focuses on reducing small interaction costs in everyday chat:
-
-- **Quick switching** — Use keyboard shortcuts to move between Agents faster
-- **More chat space** — When the sidebar is active, the conversation list hides to free up room for messages
-- **Synced pinned Agents** — Your pinned Agents automatically appear in the sidebar so priority items stay in view
+- **Persistent Agent sidebar.** v1.26.0 keeps high-frequency Agents visible during active conversations, so you no longer jump between lists to switch.
+- **Quick switching.** Keyboard shortcuts move you between Agents faster.
+- **More chat space.** With the sidebar active, the conversation list hides to free up room for messages.
+- **Synced pinned Agents.** Pinned Agents appear in the sidebar automatically, keeping priority items in view.
 
 ![Sidebar Display Effect](/blog/assets/6ee2609d79281b6b915e317461013f31.webp)
 
 ![Conversation Interface Effect](/blog/assets/1f6c4f1c5e6211735ca4924c7807aca1.webp)
 
-## How to enable
-
-This capability is currently experimental and disabled by default. To try it in self-hosted setups, enable it with:
+- **Experimental, off by default.** Cloud already has it enabled; self-hosted setups can turn it on with a feature flag:
 
 ```
 FEATURE_FLAGS=+pin_list
 ```
 
-The Cloud version already has this enabled. If you try it, share feedback in [GitHub Discussions](https://github.com/lobehub/lobe-chat/discussions/4515) so we can keep improving the experience.
+- **Built for focus.** Keeping frequently used Agents close at hand and reclaiming screen space for messages supports longer, more concentrated conversations.
 
-## Why we built it
-
-The goal of this release is straightforward: improve focus and reduce small interaction costs in everyday chat. By keeping frequently used Agents close at hand and reclaiming screen space for messages, the interface supports longer, more concentrated conversations.
+If you try it, share feedback in [GitHub Discussions](https://github.com/lobehub/lobe-chat/discussions/4515) so we can keep improving the experience.

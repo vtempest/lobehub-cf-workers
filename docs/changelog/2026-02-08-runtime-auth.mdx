@@ -12,21 +12,25 @@ tags:
 
 # Model Runtime & Authentication Improvements 🔧
 
-This release focuses on runtime reliability and sign-in stability across web and mobile. It reduces authentication friction in daily use and makes model execution paths more dependable.
+## Features
 
-## Runtime and Authentication Updates
+- **Claude Opus 4.6 on Bedrock.** Bedrock supports the latest Anthropic model.
+- **Better Notebook tool integration.** The server runtime integrates the Notebook tool more closely, with improved prompts.
+- **End-user information on OpenAI Responses.** Responses API calls can carry end-user information when needed.
+- **Custom avatars in the group chat sidebar.** Group chat participants can have their own avatars.
+- **Storage limit notifications.** File uploads that exceed the storage limit now report it clearly.
 
-On the runtime side, Bedrock now supports Claude Opus 4.6. The server runtime also includes a better-integrated Notebook tool with improved prompts, and OpenAI Responses API calls now support end-user information when needed.
+## Improvements
 
-Authentication was strengthened across providers. Microsoft authentication issues were fixed, OIDC account linking is now more reliable, and Feishu SSO behavior was improved to reduce sign-in friction.
+- **Microsoft, OIDC, and Feishu sign-in hardened.** Authentication is strengthened across providers, with more reliable OIDC account linking and less Feishu SSO friction.
+- **Mobile topic lists scroll vertically.** Long topic lists are usable on small screens.
+- **Cleaner runtime structure.** Anthropic factory logic is extracted and Moonshot is migrated to RouterRuntime.
+- **Task display.** Tasks are presented more clearly.
+- **Local-system tool implementation.** The local system tool is more capable.
 
-This update also includes cross-platform and architecture polish. Topic lists now scroll vertically on mobile, multimodal image rendering issues are fixed, Anthropic factory logic has been extracted for cleaner runtime structure, and Moonshot has been migrated to RouterRuntime.
+## Fixes
 
-## Improvements and fixes
-
-- Improved task display behavior.
-- Enhanced local-system tool implementation.
-- Fixed PDF parsing in Docker.
-- Fixed editor content loss after send errors.
-- Added custom avatars in the group chat sidebar.
-- Added notifications for file upload storage limit errors.
+- **Microsoft authentication.** Sign-in problems with Microsoft are resolved.
+- **Multimodal image rendering.** Images render correctly in multimodal replies.
+- **PDF parsing in Docker.** PDFs parse correctly in Docker deployments.
+- **Editor content after a send error.** Your draft is no longer lost when sending fails.

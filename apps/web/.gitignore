@@ -12,6 +12,9 @@ next-env.d.ts
 # Cloudflare local state (miniflare D1/KV/R2 data, deploy config)
 .wrangler/
 
+# Wrangler config with CI-supplied binding ids substituted in
+wrangler.generated.jsonc
+
 # env
 .env
 .env*.local

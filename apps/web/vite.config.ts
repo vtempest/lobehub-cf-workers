@@ -6,10 +6,15 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
+import { resolveWranglerConfig } from "./scripts/resolve-wrangler-config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const fumadocsPlugin = await fumadocs({ docs });
+
+// Undefined unless CI supplied the account-specific binding ids as build env
+// vars, in which case the plugin builds from the resolved copy instead.
+const wranglerConfigPath = resolveWranglerConfig();
 
 // Intercept ?collection= JSON IDs so rolldown never tries to parse them as JS.
 // Phase 1 (load, enforce:pre): return raw JSON so fumadocs transform can parse it.
@@ -71,6 +76,7 @@ export default defineConfig({
     fumadocsJsonWrap(),
     vinext(),
     cloudflare({
+      ...(wranglerConfigPath ? { configPath: wranglerConfigPath } : {}),
       viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
     }),
   ],

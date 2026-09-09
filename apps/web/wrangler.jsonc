@@ -17,6 +17,13 @@
   },
 
   // ---------------------------------------------------------------------
+  // The REPLACE_WITH_… ids below are account-specific. Fill them in for local
+  // work, or leave them and let CI supply them as build environment variables
+  // (CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_KV_VINEXT_CACHE_ID,
+  // CLOUDFLARE_KV_APP_CACHE_ID) — see scripts/resolve-wrangler-config.mjs.
+  // ---------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------
   // D1 — the only datastore. Create it with:
   //   bunx wrangler d1 create lobehub
   // then paste the returned database_id below.
@@ -38,18 +45,19 @@
 
   // ---------------------------------------------------------------------
   // KV — VINEXT_CACHE backs ISR/fragment caching, APP_CACHE backs rate
-  // limits and short-lived application caches. Create both with:
+  // limits and short-lived application caches. They are two separate
+  // namespaces; create both and paste the two distinct ids:
   //   bunx wrangler kv namespace create VINEXT_CACHE
   //   bunx wrangler kv namespace create APP_CACHE
   // ---------------------------------------------------------------------
   "kv_namespaces": [
     {
       "binding": "VINEXT_CACHE",
-      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID",
+      "id": "REPLACE_WITH_YOUR_VINEXT_CACHE_KV_ID",
     },
     {
       "binding": "APP_CACHE",
-      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID",
+      "id": "REPLACE_WITH_YOUR_APP_CACHE_KV_ID",
     },
   ],
 

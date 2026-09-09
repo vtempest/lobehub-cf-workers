@@ -11,53 +11,29 @@ tags:
 
 # Customizable Hotkeys, Data Export, and Provider Expansion
 
-This March release focuses on everyday workflow improvements. Custom hotkeys let you set shortcuts that match your habits. Data export makes your conversations portable. New providers and better reasoning display round out the update.
+## Features
 
-## Keyboard shortcuts that match your habits
+- **Customizable hotkeys.** Remap common actions to keys that match your habits instead of learning a preset layout.
+- **Shortcuts for clearing and deleting.** New hotkeys cover clearing conversations and deleting messages, so keyboard-driven sessions need the mouse less often.
+- **Data export for PgLite and PostgreSQL.** Back up conversations or migrate between installations without manual database operations — useful for archiving important histories, moving to a new device or server, or keeping a local backup alongside cloud storage.
+- **Six new providers.** Xinference, Cohere, Search1API, Infini-AI, and PPIO join the existing provider selection flow with no additional configuration.
+- **Dedicated reasoning content selector.** Chain-of-thought display is improved for Claude 3.7 and DeepSeek R1, making reasoning easier to read and navigate in long conversations.
+- **Better web crawling.** Dedicated support for YouTube, Reddit, and WeChat Official Account links, improved short content extraction, and an additional Search1API crawler implementation for wider coverage.
+- **Model library updates.** Google Gemini 2.5 Pro Experimental and Gemini 2.0 Flash variants, Anthropic context caching support, OpenAI gpt-4o-mini-tts, DeepSeek-V3-0324, Hunyuan-T1-Latest, QwQ, QVQ-Max, and Baidu Wenxin ernie-x1-32k-preview.
 
-Hotkeys are now customizable. You can remap common actions to keys that feel natural for your workflow rather than learning a preset layout.
+## Improvements
 
-New shortcuts have also been added for clearing conversations and deleting messages. If you prefer keyboard-driven workflows, these additions reduce the need to reach for the mouse during fast-paced sessions.
+- **UI refinements.** Revamped Drawer styles, improved editor scrolling, and clipboard screenshot sharing.
+- **Search enhancements.** Online search works with non-function-calling models including DeepSeek R1, and built-in web search is added for Wenxin and Hunyuan.
+- **File handling.** EPUB chunking is supported and PDF processing is improved.
+- **Performance.** Agent Runtime is refactored and the database core code is optimized.
 
-## Export your data for backup and migration
+## Fixes
 
-Data export is now available for both PgLite and PostgreSQL backends. You can create backups of your conversations or migrate data between installations without manual database operations.
-
-This matters most when you want to:
-
-- Archive important conversation histories
-- Move your setup to a new device or server
-- Keep a local backup alongside cloud storage
-
-## Expanded provider and reasoning support
-
-Six new providers join the lineup: Xinference, Cohere, Search1API, Infini-AI, and PPIO. Each integrates into the existing provider selection flow without requiring additional configuration steps.
-
-Reasoning models now have a dedicated content selector, and chain-of-thought display has been improved for Claude 3.7 and DeepSeek R1. The reasoning content is easier to read and navigate during long conversations.
-
-## Better web crawling for diverse content
-
-Web crawling now handles more content types with dedicated support for YouTube, Reddit, and WeChat Official Account links. Short content extraction has been improved, and Search1API provides an additional crawler implementation for better coverage.
-
-## Model library updates
-
-This release brings in several notable additions:
-
-- Google Gemini 2.5 Pro Experimental and Gemini 2.0 Flash variants
-- Anthropic context caching support
-- OpenAI gpt-4o-mini-tts voice model
-- DeepSeek-V3-0324
-- Hunyuan-T1-Latest
-- QwQ, QVQ-Max
-- Baidu Wenxin ernie-x1-32k-preview
-
-## Improvements and fixes
-
-- UI refinements: revamped Drawer styles, improved editor scrolling, clipboard screenshot sharing
-- Search enhancements: online search now works with non-function-calling models including DeepSeek R1; built-in web search added for Wenxin and Hunyuan
-- File handling: EPUB chunking support, improved PDF processing
-- Performance: refactored Agent Runtime, optimized database core code, fixed LiteLLM streaming statistics
-- Stability: resolved theme flickering, knowledge base behavior issues, and WeChat login problems
+- **LiteLLM streaming statistics.** Streaming stats are reported correctly.
+- **Theme flickering.** The theme no longer flashes on load.
+- **Knowledge base behavior.** Several knowledge base issues are resolved.
+- **WeChat login.** Sign-in problems with WeChat are fixed.
 
 ## Credits
 
