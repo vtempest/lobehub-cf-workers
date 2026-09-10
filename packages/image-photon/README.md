@@ -69,6 +69,26 @@ These are real behavioural differences, not omissions to be fixed later:
 - **`failOn` / `animated` / `density` are accepted and ignored**, so existing
   call sites type-check unchanged.
 
+## Bundling for Workers
+
+`@cf-wasm/photon` ships one entry per runtime, and only one of them runs on
+workerd. The `node` entry inlines the binary and calls
+`new WebAssembly.Module(bytes)`, which workerd refuses outright — _"Wasm code
+generation disallowed by embedder"_. The `workerd` entry imports the binary as
+a module instead, which is the shape workerd accepts.
+
+Wrangler picks the right entry on its own. A bundler in front of it needs two
+things (see `vite.worker.config.ts` in the QwkSearch worker for a worked
+example):
+
+1. **Pin the `workerd` export.** Listing `workerd` first in `resolve.conditions`
+   is not always enough — an `ssr.target` of `node` can still win.
+2. **Keep the `.wasm` import external** and copy the binary next to the output.
+   Bundlers otherwise rewrite it to an asset URL string, which is not a
+   `WebAssembly.Module`. Wrangler's default `CompiledWasm` rule compiles the
+   file at deploy time; do not add an explicit rule for it, which would shadow
+   that default.
+
 `sharp` itself is still a devDependency of the monorepo, used only by Node-only
 build scripts that need what Photon cannot do: SVG rasterisation for the macOS
 tray icon, and animated GIF → animated WebP in the CDN and docs workflows.
