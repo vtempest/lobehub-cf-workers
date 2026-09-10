@@ -26,8 +26,6 @@ packages/openapi/openapi.yml
 package-lock.json
 
 # ci
-coverage
-.coverage
 .eslintcache
 .stylelintcache
 test-output

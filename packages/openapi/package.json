@@ -4,8 +4,7 @@
   "private": true,
   "main": "./src/index.ts",
   "scripts": {
-    "generate:openapi": "bun scripts/generate-openapi.ts",
-    "test:response-compliance": "./scripts/compliance-test.sh"
+    "generate:openapi": "bun scripts/generate-openapi.ts"
   },
   "dependencies": {
     "@hono/standard-validator": "^0.3.0",

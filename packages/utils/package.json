@@ -9,10 +9,7 @@
     "./object": "./src/object.ts",
     "./*": "./src/*.ts"
   },
-  "scripts": {
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'"
-  },
+  "scripts": {},
   "dependencies": {
     "@lobechat/const": "workspace:*",
     "@lobechat/ssrf-safe-fetch": "workspace:*",

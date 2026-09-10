@@ -11,10 +11,7 @@
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "scripts": {
-    "test": "bunx vitest run --silent='passed-only'",
-    "test:coverage": "bunx vitest run --coverage"
-  },
+  "scripts": {},
   "dependencies": {
     "@lobechat/heterogeneous-agents": "workspace:*",
     "@lobechat/local-file-shell": "workspace:*",

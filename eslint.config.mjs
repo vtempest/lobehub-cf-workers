@@ -90,13 +90,6 @@ export default eslint(
     ignores: [
       // dependencies
       'node_modules',
-      // ci
-      'coverage',
-      '.coverage',
-      // test
-      'jest*',
-      '*.test.ts',
-      '*.test.tsx',
       // umi
       '.umi',
       '.umi-production',
@@ -403,13 +396,6 @@ export default eslint(
     rules: {
       'unicorn/no-process-exit': 0,
       'unicorn/prefer-top-level-await': 0,
-    },
-  },
-  // E2E and test files - allow console.log for debugging
-  {
-    files: ['e2e/**/*', '**/*.test.ts', '**/*.test.tsx'],
-    rules: {
-      'no-console': 0,
     },
   },
   // agent-tracing CLI - console output is the primary interface

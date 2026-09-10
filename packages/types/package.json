@@ -4,11 +4,7 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
-  "scripts": {
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'",
-    "test:update": "vitest -u"
-  },
+  "scripts": {},
   "dependencies": {
     "@lobehub/market-sdk": "0.39.2",
     "@lobehub/market-types": "^1.17.1",
