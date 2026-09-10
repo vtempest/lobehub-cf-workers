@@ -240,6 +240,7 @@ One line per folder — a map for finding code fast. Grouped by repository area.
 | Folder | What it is |
 | --- | --- |
 | `file-loaders/` | Reads and normalises pdf, docx, xlsx, pptx, epub, ipynb, text and more. |
+| `image-photon/` | `sharp`-shaped image pipeline on Photon WASM, so it runs on Workers. |
 | `web-crawler/` | Fetches pages and converts them to clean Markdown. |
 | `markdown-patch/` | Applies and error-reports structured patches against markdown. |
 | `editor-runtime/` | Runtime bridging the rich-text editor to app state. |
