@@ -14,7 +14,10 @@
  *   parameter, so `.webp({ quality })` accepts the option and ignores it.
  * - **Single frame only.** Animations decode to their first frame. Read
  *   `metadata().pages` before re-encoding if that would destroy the animation.
- * - **No SVG rasterisation.** Photon is a raster codec; SVG input is rejected.
+ * - **No AVIF, HEIF or SVG input.** Photon decodes PNG, JPEG, WebP, GIF and
+ *   BMP. `metadata()` still identifies the other containers from their header,
+ *   so callers can take their "cannot handle this" path instead of failing
+ *   mid-pipeline, but any operation that needs pixels throws.
  * - **`.toFile()` is absent** — there is no filesystem on Workers.
  */
 import type { Background, Fit, ResizeOptions } from './geometry';
@@ -73,6 +76,14 @@ export interface Stats {
 export interface OutputOptions {
   quality?: number;
 }
+
+/**
+ * What Photon's decoder actually accepts. Notably absent, and supported by the
+ * libvips-backed `sharp` this replaced: AVIF and HEIF. An image in one of those
+ * reaches `metadata()` intact — format, frame count, EXIF all come off the
+ * header — but cannot be resized, re-encoded or inspected pixel-wise.
+ */
+const DECODABLE_FORMATS = new Set<ImageFormat>(['bmp', 'gif', 'jpeg', 'png', 'webp']);
 
 /** sharp's own default ceiling: 0x3FFF × 0x3FFF pixels. */
 const DEFAULT_PIXEL_LIMIT = 0x3f_ff * 0x3f_ff;
@@ -192,6 +203,19 @@ export class PhotonSharp {
       };
     }
 
+    // Nothing to gain from a decode that is going to fail: report what the
+    // header gave us and let the caller decide. Undefined dimensions are how
+    // sharp's own callers already detect an image they cannot work with.
+    if (sniffed.format && !DECODABLE_FORMATS.has(sniffed.format)) {
+      return {
+        format: sniffed.format,
+        hasAlpha: sniffed.hasAlpha,
+        orientation: sniffed.orientation,
+        pages: sniffed.pages,
+        size: this.bytes.byteLength,
+      };
+    }
+
     const image = await this.decode();
     try {
       return {
@@ -253,8 +277,10 @@ export class PhotonSharp {
 
   private async decode(): Promise<PhotonImage> {
     const { format } = sniffImage(this.bytes);
-    if (format === 'svg') {
-      throw new Error('SVG input is not supported: Photon is a raster codec');
+    if (format && !DECODABLE_FORMATS.has(format)) {
+      throw new Error(
+        `Photon cannot decode ${format} images (it handles ${[...DECODABLE_FORMATS].join(', ')})`,
+      );
     }
 
     const photon = await loadPhoton();

@@ -56,7 +56,15 @@ These are real behavioural differences, not omissions to be fixed later:
 - **PNG output always carries an alpha channel.** Photon writes RGBA PNGs, so
   `metadata().hasAlpha` reads `true` on a PNG even after `.flatten()`. The
   pixels really are opaque — `stats().isOpaque` reports that correctly.
-- **No SVG rasterisation.** Photon is a raster codec; SVG input throws.
+- **No AVIF or HEIF input, and no SVG.** Photon decodes PNG, JPEG, WebP, GIF
+  and BMP — the libvips-backed `sharp` this replaced also read AVIF and HEIF.
+  `metadata()` still identifies those containers from their header and returns
+  `format`, `pages` and `size` with no dimensions, so a caller sees an image it
+  cannot work with rather than an exception mid-pipeline; anything that needs
+  pixels throws. The visible consequence: an AVIF or HEIC attachment can no
+  longer be transcoded for a model that does not accept it
+  (`normalizeMultimodalImageItems`), and reaches the model in its original
+  format or not at all.
 - **No `.toFile()`.** There is no filesystem on Workers.
 - **`failOn` / `animated` / `density` are accepted and ignored**, so existing
   call sites type-check unchanged.
