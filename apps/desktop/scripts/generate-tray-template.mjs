@@ -15,6 +15,10 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Still on `sharp`, deliberately: this rasterises an SVG, which the Photon
+// WASM codec that replaced `sharp` at runtime cannot do — Photon is a raster
+// codec only. This is a Node-only build script and never reaches the Workers
+// bundle.
 import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
