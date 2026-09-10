@@ -34,9 +34,11 @@
   ],
   "workspaces": [
     "packages/*",
-    "packages/business/*",
+    "packages/*/*",
     "apps/desktop/src/main",
+    "apps/server",
     "apps/share",
+    "apps/web",
     "apps/workbench"
   ],
   "scripts": {
