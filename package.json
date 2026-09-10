@@ -34,10 +34,11 @@
   ],
   "workspaces": [
     "packages/*",
-    "packages/business/*",
-    "e2e",
+    "packages/*/*",
     "apps/desktop/src/main",
+    "apps/server",
     "apps/share",
+    "apps/web",
     "apps/workbench"
   ],
   "scripts": {
