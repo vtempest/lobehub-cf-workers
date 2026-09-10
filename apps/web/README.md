@@ -123,9 +123,41 @@ bun run db:migrate         # remote D1
 
 # 4. Secrets
 bunx wrangler secret put BETTER_AUTH_SECRET      # openssl rand -base64 32
-bunx wrangler secret put GOOGLE_CLIENT_SECRET    # optional
+bunx wrangler secret put GOOGLE_CLIENT_ID        # optional, Google sign-in
+bunx wrangler secret put GOOGLE_CLIENT_SECRET    # optional, Google sign-in
 bunx wrangler secret put STRIPE_SECRET_KEY       # optional, billing only
 ```
+
+### Sign-in
+
+Better Auth (`lib/auth.ts`) offers Google — as a redirect sign-in *and* as a
+Google One Tap prompt — a mailed magic link, and an anonymous session for
+trying the app before signing up. Discord and LinkedIn register too if their
+credential pairs are set.
+
+Google needs both halves of its pair (`GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET`). A provider with only one half is not registered at
+all: better-auth would otherwise advertise a provider whose every sign-in — the
+One Tap callback included, since it verifies Google's id token against the
+client id — can only fail. In the Google Cloud console, add
+`https://<your-host>/api/auth/callback/google` as an authorized redirect URI and
+`https://<your-host>` as an authorized JavaScript origin (One Tap needs the
+latter).
+
+Because the credentials are Worker secrets, the browser bundle cannot know what
+is configured. `/api/auth/providers` answers that at runtime — which providers
+are usable, plus the public Google client id — so the sign-in buttons and the
+One Tap prompt appear only when they can actually work.
+
+**Hosts.** A Workers deployment answers on more than one name (the custom
+domain, the `*.workers.dev` one, preview versions). `lib/auth/hosts.ts` lists
+them and better-auth resolves the base URL per request from that list, so each
+visitor keeps the host they arrived on for their cookies, OAuth callback and
+magic link. A host that is not on the list is rejected by the CSRF origin check
+with a 403 before it reaches a handler — which is what a login page that does
+nothing usually turns out to be. Add deployment-specific names to
+`BETTER_AUTH_ALLOWED_HOSTS` (comma-separated) rather than pinning
+`BETTER_AUTH_URL` to one of them.
 
 ### Email
 

@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
+import { OneTap } from "@/components/auth/one-tap"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "sonner"
 import "./globals.css"
@@ -39,6 +40,8 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          {/* Google One Tap, so a signed-out visitor can sign in from any page. */}
+          <OneTap />
           <Toaster position="top-right" />
         </ThemeProvider>
       </body>

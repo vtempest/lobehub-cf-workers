@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { GoogleSignIn } from "@/components/auth/google-signin"
 import { MagicLinkSignIn } from "@/components/auth/magic-link-signin"
 import { Card } from "@/components/ui/card"
@@ -7,7 +8,32 @@ import Link from "next/link"
 import Image from "next/image"
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME;
 
+/**
+ * A failed OAuth callback lands here rather than on better-auth's built-in
+ * error page (see lib/auth/oauth-state.ts), so the reason has to be shown
+ * somewhere. Read from `window.location` on mount rather than through
+ * `useSearchParams`, which would drag this page into a Suspense boundary for a
+ * value that only exists on a redirect.
+ */
+function useSignInError() {
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("error")
+    if (!code) return
+    setError(
+      code === "state_mismatch"
+        ? "That sign-in link expired before it came back. Please try again."
+        : `Sign-in failed (${code}). Please try again.`,
+    )
+  }, [])
+
+  return error
+}
+
 export default function LoginPage() {
+  const signInError = useSignInError()
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md p-8">
@@ -33,6 +59,15 @@ export default function LoginPage() {
           </div>
 
           <div className="w-full space-y-4">
+            {signInError && (
+              <p
+                className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-center text-sm text-destructive"
+                role="alert"
+              >
+                {signInError}
+              </p>
+            )}
+
             <GoogleSignIn />
 
             <div className="relative">
