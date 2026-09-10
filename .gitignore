@@ -56,6 +56,10 @@ package-lock.json
 bun.lockb
 .pnpm-store/
 
+# Exception: Cloudflare Workers Builds installs apps/web with
+# `bun install --frozen-lockfile`, which fails unless the lockfile is committed.
+!apps/web/bun.lock
+
 # Build outputs
 dist/
 public/_spa/

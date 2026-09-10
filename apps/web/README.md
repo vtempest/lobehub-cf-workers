@@ -149,13 +149,47 @@ accepts an exact version — an nvm alias such as `lts/krypton` fails at
 sync when bumping, or override them with a `NODE_VERSION` build variable in the
 project settings.
 
+Its install step is not configurable: before any build command of yours runs,
+Workers Builds runs the detected package manager's *frozen* install — with a
+`BUN_VERSION` build variable set, that is `bun install --frozen-lockfile`. Bun
+refuses that when the lockfile is missing or stale:
+
+```text
+error: lockfile had changes, but lockfile is frozen
+```
+
+So `apps/web/bun.lock` is committed, and the repository's `*.lock` ignore rule
+carries an exception for it. It is the only lockfile here: nothing in `apps/web`
+depends on a workspace package, so this app installs standalone and the rest of
+the monorepo stays lockfile-free. Regenerate it in the same commit as any
+dependency change to `apps/web/package.json`, or the next build fails with the
+error above:
+
+```bash
+cd apps/web && bun install   # rewrites bun.lock
+```
+
+The file is written in Bun's `lockfileVersion: 2` format, which only Bun 1.4 and
+newer can read — older Bun reports `UnknownLockfileVersion` and then the frozen
+error. Workers Builds has no version file for Bun (unlike `.nvmrc` for Node), so
+that floor lives in a `BUN_VERSION` build variable: keep it at the Bun version
+the lockfile was generated with (`1.4.0` today). The build image's own default is
+1.2.15, which cannot read this lockfile.
+
 Project settings for a build of this app:
 
 | Setting | Value |
 | --- | --- |
 | Root directory | `apps/web` |
-| Build command | `pnpm run build` |
-| Deploy command | `pnpm exec wrangler deploy` |
+| Build command | `bun run build` |
+| Deploy command | `bunx wrangler deploy` |
+| Non-production branch deploy command | `bunx wrangler versions upload` |
+
+The pnpm equivalents (`pnpm run build`, `pnpm exec wrangler deploy`) also work —
+by then the install has already happened. Installing from the repository root
+instead needs a root lockfile, which this monorepo does not carry; that setup
+requires a `SKIP_DEPENDENCY_INSTALL=1` build variable and an install of your own
+at the front of the build command.
 
 ## Commands
 
@@ -168,8 +202,7 @@ bun run upload           # build and upload a version without deploying it
 bun run cf:deploy        # deploy an already-built dist/ (no build step)
 bun run cf:upload        # upload an already-built dist/ as a version
 bun run typecheck        # tsc --noEmit
-bun run test             # vitest run (lib/ unit tests)
-bun run check            # typecheck + tests
+bun run check            # typecheck (there is no test suite in this repository)
 bun run db:generate      # regenerate migrations from lib/db/schema.ts
 bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 ```
@@ -200,19 +233,15 @@ blocked postinstalls, `npm warn Unknown project config` — is related; the
 
 ### Workers Builds
 
-In **Workers & Pages → your Worker → Settings → Build**:
-
-| Setting | Value |
-| --- | --- |
-| Root directory | *(leave empty — the pnpm workspace must install from the repo root)* |
-| Build command | `bun run web:build` |
-| Deploy command | `bun run web:deploy` |
-| Non-production branch deploy command | `bun run web:upload` |
+In **Workers & Pages → your Worker → Settings → Build**, use the settings in
+[Cloudflare Workers Builds](#cloudflare-workers-builds) above — root directory
+`apps/web`, so the install, the build and Wrangler all run inside this app.
 
 The defaults (`npx wrangler deploy` / `npx wrangler versions upload` with no
-build command) cannot work here: they run at the root directory and skip the
-build. `web:deploy` and `web:upload` build first, so they are also correct on
-their own if you leave the build command empty.
+build command) cannot work here: they skip the build, and with an empty root
+directory they run Wrangler at the repository root, which fails with the
+`Missing entry-point` error above. `bun run deploy` and `bun run upload` build
+first, so they are correct on their own if you leave the build command empty.
 
 ### Binding ids in CI
 
