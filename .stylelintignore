@@ -5,8 +5,6 @@
 node_modules
 
 # ci
-coverage
-.coverage
 
 # production
 dist

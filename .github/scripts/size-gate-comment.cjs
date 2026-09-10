@@ -6,8 +6,8 @@
  *   const comment = require('<workspace>/.github/scripts/size-gate-comment.cjs');
  *   await comment({ github, context, title: 'Web dist', report, failed, identifier: 'web' });
  *
- * `identifier` keeps one comment per gate: the web (e2e) and desktop (asar)
- * workflows run independently on the same PR and must not overwrite each other.
+ * `identifier` keeps one comment per gate: independent size gates can run on
+ * the same PR and must not overwrite each other's comment.
  */
 const sizeGateComment = async ({ github, context, title, report, failed, identifier }) => {
   if (!identifier)

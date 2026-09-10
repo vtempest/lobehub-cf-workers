@@ -12,8 +12,6 @@
   },
   "main": "src/index.ts",
   "scripts": {
-    "test": "vitest --run",
-    "test:coverage": "vitest --coverage --silent='passed-only'",
     "type-check": "tsgo --noEmit -p tsconfig.json"
   },
   "dependencies": {

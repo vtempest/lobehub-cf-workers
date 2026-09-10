@@ -154,6 +154,33 @@ accepts an exact version — an nvm alias such as `lts/krypton` fails at
 sync when bumping, or override them with a `NODE_VERSION` build variable in the
 project settings.
 
+Its install step is not configurable: before any build command of yours runs,
+Workers Builds runs the detected package manager's *frozen* install — with a
+`BUN_VERSION` build variable set, that is `bun install --frozen-lockfile`. Bun
+refuses that when the lockfile is missing or stale:
+
+```text
+error: lockfile had changes, but lockfile is frozen
+```
+
+So `apps/web/bun.lock` is committed, and the repository's `*.lock` ignore rule
+carries an exception for it. It is the only lockfile here: nothing in `apps/web`
+depends on a workspace package, so this app installs standalone and the rest of
+the monorepo stays lockfile-free. Regenerate it in the same commit as any
+dependency change to `apps/web/package.json`, or the next build fails with the
+error above:
+
+```bash
+cd apps/web && bun install   # rewrites bun.lock
+```
+
+The file is written in Bun's `lockfileVersion: 2` format, which only Bun 1.4 and
+newer can read — older Bun reports `UnknownLockfileVersion` and then the frozen
+error. Workers Builds has no version file for Bun (unlike `.nvmrc` for Node), so
+that floor lives in a `BUN_VERSION` build variable: keep it at the Bun version
+the lockfile was generated with (`1.4.0` today). The build image's own default is
+1.2.15, which cannot read this lockfile.
+
 The build settings themselves are under [Deploying → Workers
 Builds](#workers-builds).
 
@@ -168,8 +195,7 @@ bun run upload           # build and upload a version without deploying it
 bun run cf:deploy        # deploy an already-built dist/ (no build step)
 bun run cf:upload        # upload an already-built dist/ as a version
 bun run typecheck        # tsc --noEmit
-bun run test             # vitest run (lib/ unit tests)
-bun run check            # typecheck + tests
+bun run check            # typecheck (there is no test suite in this repository)
 bun run db:generate      # regenerate migrations from lib/db/schema.ts
 bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 ```
@@ -236,6 +262,17 @@ it is the wrong build command for a fresh CI container.
 What cannot work either way is leaving the **build command empty**: the deploy
 commands do not build, and every step after the missing `dist/` fails.
 
+Either layout still runs the frozen install described in [Cloudflare Workers
+Builds](#cloudflare-workers-builds) first. With root directory `apps/web` that
+install uses the committed `apps/web/bun.lock` and succeeds; at the repository
+root there is no lockfile to install from, so that layout also needs a
+`SKIP_DEPENDENCY_INSTALL=1` build variable and leaves the install to
+`web:cf:build`.
+
+`bun run deploy` and `bun run upload` build before they deploy, so they are the
+one correct choice if you would rather leave the build command empty and put
+everything in the deploy command.
+
 ### Binding ids in CI
 
 `wrangler.jsonc` carries the real D1 and KV ids. A resource id is not a
@@ -256,8 +293,8 @@ them:
 is a no-op. The ids have to be right at *build* time, not deploy time — the Vite
 plugin bakes the bindings into `dist/server/wrangler.json`, and that is what
 gets uploaded. Re-creating a resource therefore means changing the id in *both*
-`wrangler.jsonc` and that script's substitution table; a test fails if they
-drift apart.
+`wrangler.jsonc` and that script's substitution table; the resolver warns at
+build time if they drift apart.
 
 Bindings the account does not back are rejected at upload rather than at
 runtime: `send_email` needs an Email Routing zone and `images` needs Cloudflare

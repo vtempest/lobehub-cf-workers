@@ -56,6 +56,10 @@ package-lock.json
 bun.lockb
 .pnpm-store/
 
+# Exception: Cloudflare Workers Builds installs apps/web with
+# `bun install --frozen-lockfile`, which fails unless the lockfile is committed.
+!apps/web/bun.lock
+
 # Build outputs
 dist/
 public/_spa/
@@ -85,10 +89,7 @@ next-env.d.ts
 # Vercel
 .vercel/
 
-# Testing and CI
-coverage/
-.coverage/
-.nyc_output/
+# Lint caches
 .eslintcache
 .stylelintcache
 
@@ -143,10 +144,8 @@ scripts/clerk-to-betterauth/prod/*.json
 *.ppt*
 *.doc*
 *.xls*
-e2e/reports
 out
 i18n-unused-keys-report.json
-.vitest-reports
 
 pnpm-lock.yaml
 .turbo

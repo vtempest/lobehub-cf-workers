@@ -25,7 +25,8 @@ const RESOLVED_CONFIG = path.join(projectRoot, 'wrangler.generated.jsonc');
 /**
  * Committed id in wrangler.jsonc → environment variable that replaces it.
  * Keep the left-hand side in step with `wrangler.jsonc`: an id that is no
- * longer in the file is inert rather than wrong, so a test guards it.
+ * longer in the file is inert rather than wrong, so `resolveWranglerConfig()`
+ * warns about it at build time.
  */
 const SUBSTITUTIONS = {
   '059ea054-f709-4b4b-bb6e-dc25dc841ed5': 'CLOUDFLARE_D1_DATABASE_ID',
@@ -40,6 +41,13 @@ const SUBSTITUTIONS = {
  */
 export function resolveWranglerConfig(env = process.env) {
   const source = readFileSync(SOURCE_CONFIG, 'utf8');
+
+  const stale = staleSubstitutions(source);
+  if (stale.length > 0) {
+    console.warn(
+      `[wrangler] substitution table is out of date with wrangler.jsonc; these overrides no longer apply: ${stale.join(', ')}`,
+    );
+  }
 
   // Plain token replacement rather than a JSONC parse/serialize round-trip, so
   // the comments explaining every binding survive into the generated file.
@@ -59,12 +67,11 @@ export function resolveWranglerConfig(env = process.env) {
  * Ids this module claims to substitute that `wrangler.jsonc` no longer
  * contains — a re-created resource whose override would silently stop working.
  *
+ * @param {string} [source] contents of `wrangler.jsonc`, read when omitted
  * @returns {string[]} environment variables whose target id is missing, empty
  *   when the two files are in step
  */
-export function staleSubstitutions() {
-  const source = readFileSync(SOURCE_CONFIG, 'utf8');
-
+export function staleSubstitutions(source = readFileSync(SOURCE_CONFIG, 'utf8')) {
   return Object.entries(SUBSTITUTIONS)
     .filter(([id]) => !source.includes(id))
     .map(([, variable]) => variable);

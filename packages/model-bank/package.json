@@ -97,9 +97,7 @@
     "./types": "./src/types/index.ts"
   },
   "scripts": {
-    "build": "tsdown",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'"
+    "build": "tsdown"
   },
   "dependencies": {
     "@lobechat/business-const": "workspace:*",

@@ -20,10 +20,7 @@
   "author": "LobeHub <i@lobehub.com>",
   "sideEffects": false,
   "main": "./src/index.ts",
-  "scripts": {
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'"
-  },
+  "scripts": {},
   "dependencies": {
     "@xmldom/xmldom": "^0.9.10",
     "concat-stream": "^2.0.0",

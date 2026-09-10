@@ -4,7 +4,7 @@
  * none exists). Used with actions/download-artifact's `run-id` input:
  *
  *   const finder = require('<workspace>/.github/scripts/find-size-baseline.js');
- *   return await finder({ github, context, workflowId: 'e2e.yml', artifactName: 'bundle-size-baseline-web' });
+ *   return await finder({ github, context, workflowId: 'pr-build-desktop.yml', artifactName: 'bundle-size-baseline-desktop' });
  *
  * The returned string becomes the step's `result` output (empty string = no
  * baseline yet, callers should skip the download step and let the gate degrade

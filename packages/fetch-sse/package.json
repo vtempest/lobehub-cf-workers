@@ -19,10 +19,7 @@
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "scripts": {
-    "test": "vitest",
-    "test:coverage": "vitest --coverage --silent='passed-only'"
-  },
+  "scripts": {},
   "dependencies": {
     "@lobechat/const": "workspace:*",
     "@lobechat/model-runtime": "workspace:*",
