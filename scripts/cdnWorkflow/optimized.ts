@@ -13,10 +13,7 @@ export const opimized = async (
   inputBuffer: ArrayBuffer,
   width: number = WIDTH,
 ): Promise<Buffer> => {
-  return await sharp(inputBuffer)
-    .resize({ width: width, withoutEnlargement: true })
-    .webp()
-    .toBuffer();
+  return await sharp(inputBuffer).resize({ width, withoutEnlargement: true }).webp().toBuffer();
 };
 
 export const opimizedGif = async (inputBuffer: ArrayBuffer): Promise<Buffer> => {

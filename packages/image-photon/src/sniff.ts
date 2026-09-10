@@ -17,10 +17,10 @@ export interface SniffResult {
   format?: ImageFormat;
   hasAlpha?: boolean;
   height?: number;
-  /** Frame count. 1 for a still image, >1 for an animation. */
-  pages: number;
   /** EXIF orientation, 1-8. Undefined when the file carries no EXIF. */
   orientation?: number;
+  /** Frame count. 1 for a still image, >1 for an animation. */
+  pages: number;
   width?: number;
 }
 

@@ -20,6 +20,10 @@
  *   mid-pipeline, but any operation that needs pixels throws.
  * - **`.toFile()` is absent** — there is no filesystem on Workers.
  */
+// Type-only, so it is erased at compile time and the WASM stays out of the
+// module graph until `loadPhoton()` actually pulls it in.
+import type * as Photon from '@cf-wasm/photon';
+
 import type { Background, Fit, ResizeOptions } from './geometry';
 import { parseBackground, planResize } from './geometry';
 import type { ChannelStats, RawImage } from './pixels';
@@ -35,7 +39,7 @@ import { sniffImage } from './sniff';
 
 export type { Background, ChannelStats, Fit, ImageFormat, ResizeOptions };
 
-type PhotonModule = typeof import('@cf-wasm/photon');
+type PhotonModule = typeof Photon;
 type PhotonImage = InstanceType<PhotonModule['PhotonImage']>;
 
 /** Formats Photon can encode. Anything else falls back to PNG on output. */
@@ -47,10 +51,10 @@ export interface PhotonSharpOptions {
    * frame regardless. `metadata().pages` still reports the real frame count.
    */
   animated?: boolean;
-  /** Accepted for sharp compatibility; Photon fails on any undecodable input. */
-  failOn?: 'error' | 'none' | 'truncated' | 'warning';
   /** Accepted for sharp compatibility and ignored: SVG input is unsupported. */
   density?: number;
+  /** Accepted for sharp compatibility; Photon fails on any undecodable input. */
+  failOn?: 'error' | 'none' | 'truncated' | 'warning';
   /** Reject images above this pixel count. `false` disables the check. */
   limitInputPixels?: boolean | number;
 }
