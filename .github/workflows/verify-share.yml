@@ -24,6 +24,11 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
+      # Empty in a fork, and in any clone of this repository that was never given
+      # Cloudflare credentials. The upload step degrades to `--dry-run` then, which
+      # still builds the worker and runs the bundle-size guard — the part of this
+      # job that gates the merge — instead of failing every PR on a missing secret.
+      HAS_CF_TOKEN: ${{ (secrets.CLOUDFLARE_PREVIEW_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN) != '' }}
       SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
       USE_OVERLAY: ${{ github.event.pull_request.head.repo.full_name == github.repository && vars.OVERLAY_REPOSITORY != '' && secrets.LOBEHUB_CLOUD_TOKEN != '' }}
     steps:
@@ -139,10 +144,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PREVIEW_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          if [ "$SAME_REPO" = 'true' ]; then
+          if [ "$SAME_REPO" = 'true' ] && [ "$HAS_CF_TOKEN" = 'true' ]; then
             set -- --preview-alias "pr${PR}" --message "PR-${PR}"
           else
             set -- --dry-run
+            echo "No Cloudflare token available — building and size-checking only, no preview upload."
           fi
           node_modules/.bin/wrangler versions upload \
             --config build/server/wrangler.json "$@" | tee /tmp/upload.log
@@ -152,13 +158,13 @@ jobs:
             echo "::error::worker bundle ${gzip_kib} KiB gzip exceeds the 8 MiB guard (plan limit is 10 MiB)"
             exit 1
           fi
-          if [ "$SAME_REPO" = 'true' ]; then
+          if [ "$SAME_REPO" = 'true' ] && [ "$HAS_CF_TOKEN" = 'true' ]; then
             echo "Preview: https://pr${PR}-lobehub-share.lobeobjects-tg.workers.dev" >> "$GITHUB_STEP_SUMMARY"
           fi
         working-directory: apps/share
 
       - name: Comment the preview URL
-        if: steps.detect.outputs.should_build == 'true' && env.SAME_REPO == 'true'
+        if: steps.detect.outputs.should_build == 'true' && env.SAME_REPO == 'true' && env.HAS_CF_TOKEN == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

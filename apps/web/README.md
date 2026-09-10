@@ -105,6 +105,10 @@ reload shows what happened instead of silently losing the turn.
 
 ## Setup
 
+The D1 database, both KV namespaces and the R2 bucket already exist in this
+project's Cloudflare account, and `wrangler.jsonc` names them — so steps 1 and 2
+are only for a fork or a second account.
+
 ```bash
 pnpm install
 
@@ -114,8 +118,9 @@ bunx wrangler kv namespace create VINEXT_CACHE
 bunx wrangler kv namespace create APP_CACHE
 bunx wrangler r2 bucket create lobehub-files
 
-# 2. Paste the returned ids into wrangler.jsonc (replace the REPLACE_WITH_… placeholders).
-#    In CI, set them as environment variables instead — see "Binding ids in CI".
+# 2. Paste the returned ids into wrangler.jsonc, over the ones committed there.
+#    In CI, override them with environment variables instead — see
+#    "Binding ids in CI".
 
 # 3. Apply the schema
 bun run db:migrate:local   # local miniflare copy
@@ -176,20 +181,8 @@ that floor lives in a `BUN_VERSION` build variable: keep it at the Bun version
 the lockfile was generated with (`1.4.0` today). The build image's own default is
 1.2.15, which cannot read this lockfile.
 
-Project settings for a build of this app:
-
-| Setting | Value |
-| --- | --- |
-| Root directory | `apps/web` |
-| Build command | `bun run build` |
-| Deploy command | `bunx wrangler deploy` |
-| Non-production branch deploy command | `bunx wrangler versions upload` |
-
-The pnpm equivalents (`pnpm run build`, `pnpm exec wrangler deploy`) also work —
-by then the install has already happened. Installing from the repository root
-instead needs a root lockfile, which this monorepo does not carry; that setup
-requires a `SKIP_DEPENDENCY_INSTALL=1` build variable and an install of your own
-at the front of the build command.
+The build settings themselves are under [Deploying → Workers
+Builds](#workers-builds).
 
 ## Commands
 
@@ -209,47 +202,87 @@ bun run cf:typegen       # regenerate worker binding types from wrangler.jsonc
 
 Each has a passthrough at the repository root (`bun run web:dev`,
 `web:build`, `web:deploy`, `web:upload`, `web:preview`, `web:db:migrate`), so
-CI never has to `cd` into this directory.
+CI never has to `cd` into this directory. `web:cf:build` additionally installs
+this app's dependencies — see [Workers Builds](#workers-builds).
 
 ## Deploying
 
 This app is a Worker **built by Vite**, not a directory of static files. Its
 `wrangler.jsonc` declares `main` and an `ASSETS` binding, but the assets
 directory is filled in at build time by `@cloudflare/vite-plugin`, which writes
-`dist/lobehub-web/wrangler.json` plus a `.wrangler/deploy/config.json` pointing
-at it. So **Wrangler must run inside `apps/web`, and only after a build** —
-`wrangler deploy` walks up from the working directory to find that redirect.
+`dist/server/wrangler.json` — the config that is actually uploaded — plus a
+`.wrangler/deploy/config.json` redirect pointing at it. **Wrangler therefore has
+to run after a build**: with no `dist/`, there is nothing to deploy.
 
-Running Wrangler at the repository root fails before it uploads anything:
+Wrangler finds that config by walking up from its working directory. `apps/web`
+gets the redirect from the build; the repository root has a committed one
+([`.wrangler/deploy/config.json`](../../.wrangler/deploy/config.json)) naming
+the same file, so a build followed by a bare `wrangler deploy` or `wrangler
+versions upload` works from either place. Without a build, both report:
 
 ```text
 ✘ [ERROR] Missing entry-point to Worker script or to assets directory
 ```
 
-There is no Wrangler config at the repository root, so nothing supplies `main`
-or `assets.directory`. Nothing further up the log — peer-dependency warnings,
-blocked postinstalls, `npm warn Unknown project config` — is related; the
-`npm warn` lines only mean `npx` was used in a repository configured for pnpm.
+Nothing further up such a log — peer-dependency warnings, blocked postinstalls,
+`npm warn Unknown project config` — is related; the `npm warn` lines only mean
+`npx` was used in a repository configured for pnpm.
 
 ### Workers Builds
 
-In **Workers & Pages → your Worker → Settings → Build**, use the settings in
-[Cloudflare Workers Builds](#cloudflare-workers-builds) above — root directory
-`apps/web`, so the install, the build and Wrangler all run inside this app.
+In **Workers & Pages → your Worker → Settings → Build**. Either layout works;
+the first is what this app is meant to use.
 
-The defaults (`npx wrangler deploy` / `npx wrangler versions upload` with no
-build command) cannot work here: they skip the build, and with an empty root
-directory they run Wrangler at the repository root, which fails with the
-`Missing entry-point` error above. `bun run deploy` and `bun run upload` build
-first, so they are correct on their own if you leave the build command empty.
+**Root directory `apps/web`** — installs this app's dependencies only (~15s)
+and leaves both deploy commands at their defaults:
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `apps/web` |
+| Build command | `bun run build` |
+| Deploy command | `npx wrangler deploy` *(default)* |
+| Non-production branch deploy command | `npx wrangler versions upload` *(default)* |
+
+**Root directory at the repository root** — needs a build command that installs
+this app first, because the root `bun install` does not reach it: the root
+`package.json` `workspaces` array (what bun reads) does not list `apps/web`,
+only `pnpm-workspace.yaml` does.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | *(empty)* |
+| Build command | `bun run web:cf:build` |
+| Deploy command | `npx wrangler deploy` *(default)* |
+| Non-production branch deploy command | `npx wrangler versions upload` *(default)* |
+
+`web:cf:build` is `cd apps/web && bun install && bun run build`. The monorepo
+passthrough `bun run web:build` assumes the dependencies are already there, so
+it is the wrong build command for a fresh CI container.
+
+What cannot work either way is leaving the **build command empty**: the deploy
+commands do not build, and every step after the missing `dist/` fails.
+
+Either layout still runs the frozen install described in [Cloudflare Workers
+Builds](#cloudflare-workers-builds) first. With root directory `apps/web` that
+install uses the committed `apps/web/bun.lock` and succeeds; at the repository
+root there is no lockfile to install from, so that layout also needs a
+`SKIP_DEPENDENCY_INSTALL=1` build variable and leaves the install to
+`web:cf:build`.
+
+`bun run deploy` and `bun run upload` build before they deploy, so they are the
+one correct choice if you would rather leave the build command empty and put
+everything in the deploy command.
 
 ### Binding ids in CI
 
-`wrangler.jsonc` is committed with `REPLACE_WITH_…` placeholders, since the D1
-and KV ids are account-specific. Paste your own ids in for local work, or set
-them as build environment variables and leave the file alone:
+`wrangler.jsonc` carries the real D1 and KV ids. A resource id is not a
+credential — it is inert without an API token — so it is committed, the way
+Wrangler configs normally are, and a build needs no variables at all.
 
-| Variable | Fills |
+To build against a **different** account without editing the file, override
+them:
+
+| Variable | Replaces |
 | --- | --- |
 | `CLOUDFLARE_D1_DATABASE_ID` | `d1_databases[DB].database_id` |
 | `CLOUDFLARE_KV_VINEXT_CACHE_ID` | `kv_namespaces[VINEXT_CACHE].id` |
@@ -258,13 +291,14 @@ them as build environment variables and leave the file alone:
 `scripts/resolve-wrangler-config.mjs` substitutes them into a gitignored
 `wrangler.generated.jsonc` that `vite.config.ts` builds from. With none set it
 is a no-op. The ids have to be right at *build* time, not deploy time — the Vite
-plugin bakes the bindings into `dist/lobehub-web/wrangler.json`, and that is
-what gets uploaded.
+plugin bakes the bindings into `dist/server/wrangler.json`, and that is what
+gets uploaded. Re-creating a resource therefore means changing the id in *both*
+`wrangler.jsonc` and that script's substitution table; the resolver warns at
+build time if they drift apart.
 
-A deploy with the placeholders still in place fails on the invalid ids rather
-than on the entry point, so create the resources first (see [Setup](#setup)).
-`send_email` has the same property: it is rejected unless the account has an
-Email Routing zone — drop that block if yours does not.
+Bindings the account does not back are rejected at upload rather than at
+runtime: `send_email` needs an Email Routing zone and `images` needs Cloudflare
+Images — drop either block if yours has neither.
 
 ## Notes on what was removed from the starter
 

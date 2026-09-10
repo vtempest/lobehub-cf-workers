@@ -121,6 +121,7 @@
     "type-check": "tsgo --noEmit",
     "type-check:tsc": "tsc --noEmit",
     "web:build": "pnpm --filter @lobehub/web build",
+    "web:cf:build": "cd apps/web && bun install && bun run build",
     "web:db:migrate": "pnpm --filter @lobehub/web db:migrate",
     "web:deploy": "pnpm --filter @lobehub/web deploy",
     "web:dev": "pnpm --filter @lobehub/web dev",
