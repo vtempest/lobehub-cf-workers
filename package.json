@@ -35,7 +35,6 @@
   "workspaces": [
     "packages/*",
     "packages/business/*",
-    "e2e",
     "apps/desktop/src/main",
     "apps/share",
     "apps/workbench"
