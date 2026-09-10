@@ -47,7 +47,16 @@ export interface CloudflareEnv {
 
   // Secrets (`wrangler secret put`). All optional so an unconfigured
   // deployment degrades on the feature that needs them, not at boot.
+  /** Optional additional OAuth providers; both halves of a pair are required. */
+  AUTH_DISCORD_ID?: string;
+  AUTH_DISCORD_SECRET?: string;
+  AUTH_LINKEDIN_ID?: string;
+  AUTH_LINKEDIN_SECRET?: string;
+  /** Extra hosts this deployment is served from — see `lib/auth/hosts.ts`. */
+  BETTER_AUTH_ALLOWED_HOSTS?: string;
   BETTER_AUTH_SECRET?: string;
+  /** Extra origins accepted by the CSRF origin check, comma-separated. */
+  BETTER_AUTH_TRUSTED_ORIGINS?: string;
   BETTER_AUTH_URL?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
@@ -86,4 +95,21 @@ export function tryGetBindings(): CloudflareEnv | null {
 /** Test hook: install a stub env, or clear it with `null`. */
 export function __setBindingsForTests(env: CloudflareEnv | null): void {
   bindings = env;
+}
+
+/**
+ * One environment value, wherever it happens to live.
+ *
+ * Inside a Worker request the bindings are the source of truth (`wrangler
+ * secret put`); outside one — `vinext dev`, drizzle-kit, scripts — there are no
+ * bindings and `process.env` is all there is. Auth configuration is read
+ * through here so the same module works in both places instead of throwing on
+ * a cold module graph walk.
+ */
+export function getEnv(key: keyof CloudflareEnv | string): string | undefined {
+  const value = (tryGetBindings() as Record<string, unknown> | null)?.[key];
+  if (typeof value === 'string' && value) return value;
+
+  const fromProcess = typeof process === 'undefined' ? undefined : process.env?.[key];
+  return fromProcess || undefined;
 }
