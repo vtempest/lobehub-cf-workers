@@ -1,3 +1,12 @@
+/**
+ * @vitest-environment node
+ *
+ * Worker-side code, and the root `vitest.config.mts` would otherwise run this
+ * file under happy-dom: there `cookie` is a forbidden header name, so
+ * `new Request(url, { headers: { cookie } })` silently drops it and the
+ * cookie-bookmark case below can never pass. `apps/web/vitest.config.ts`
+ * already runs on Node; this directive makes the root config agree.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {
